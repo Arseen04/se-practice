@@ -1,18 +1,14 @@
-# Traceability — use cases → stories → criteria
+# Traceability — Smart Campus Study Room Booking
 
-One row per use case. All six rows stay, even the ones with nothing behind them: an empty cell is a
-finding you report, not a failure you hide. Use real IDs, comma-separated; write `none` where there
-is nothing.
+| Use Case | User Stories | Acceptance Criteria |
+| --- | --- | --- |
+| UC-01 View availability | US-01 | — |
+| UC-02 Book room | US-02 | AC-01, AC-02, AC-03, AC-04, AC-05 |
+| UC-03 Cancel booking | US-03 | AC-06, AC-07, AC-08 |
+| UC-04 Block or unblock room | US-05 | AC-09, AC-10, AC-11 |
+| UC-05 Review usage | US-06 | — |
+| UC-06 Send confirmation | US-04 | — |
 
-| Use case | Stories (US-nn) | Criteria (AC-nn) | Gap? |
-| --- | --- | --- | --- |
-| UC-01 View availability | TODO | TODO | |
-| UC-02 Book room | TODO | TODO | |
-| UC-03 Cancel booking | TODO | TODO | |
-| UC-04 Block or unblock room | TODO | TODO | |
-| UC-05 Review usage | TODO | TODO | |
-| UC-06 Send confirmation | TODO | TODO | |
+**Stories that belong to no use case:** none — all six stories map 1:1 to a use case.
 
-**Stories that belong to no use case:** TODO (list the US-nn IDs, or `none`)
-
-**What the gaps tell you:** TODO (one or two sentences — the long version goes in lab-report.md §8)
+**What the gaps tell you:** UC-01, UC-05 and UC-06 have a story but no acceptance criteria, because only 3 of the 6 stories were selected for Part 3. Story-level coverage does not imply test-level coverage — a use case can look "done" while having zero executable checks behind it.

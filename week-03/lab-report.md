@@ -171,7 +171,7 @@ Administrator --> UC6
 ```
 
 Rendered diagram (image, or a link):
-
+![alt text](../smart_campus_use_case_diagram.png)
 ---
 
 ## 7. Diagram review (Part 4)
@@ -198,6 +198,15 @@ Summarise what the table in `requirements/traceability.md` shows:
 - Criteria that test **no rule** from section 1:
 
 **What does the largest gap tell you about the generated requirements?**
+Use cases with no story behind them: none — all six use cases have exactly one story.
+Stories with no use case they belong to: none — all six stories map 1:1 to a use case.
+Criteria that test no rule from section 1: none — every AC ties back to R1, R2, R3 or R4.
+
+Largest gap: UC-01 (View availability), UC-05 (Review usage) and UC-06 (Send confirmation)
+have stories but no acceptance criteria, because only 3 of 6 stories were selected for Part 3.
+This tells me the generated requirements are only as complete as the part of the pipeline that
+was actually exercised — a use case can look "covered" at the story level while having zero
+executable tests behind it.
 
 ---
 

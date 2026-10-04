@@ -184,10 +184,50 @@ Paste the complete output of `python tests/check_models.py`, then explain **ever
 keeping**. The same IDs go in `submission.yml` under `checker.kept_fails`. A FAIL you report and explain costs you nothing. One you hide costs the whole criterion.
 
 ```text
-<paste the full output>
+Week 04 structural check - shape only, never quality
+
+UC1  PASS  Student and Administrator declared
+UC2  PASS  named system boundary: "Smart Campus Room Booking"
+UC3  PASS  all actors declared outside the boundary
+UC4  PASS  all scenario goals present (6 use cases)
+UC5  PASS  no actor is associated with a confirmation use case
+UC6  PASS  actor responsibilities match the scenario
+UC7  PASS  use cases are goals, not screens or components
+UC8  PASS  every include / extend / generalization carries a ' why: comment (or there are none)
+UC9  PASS  revised diagram differs from the AI's original
+CL1  PASS  Student, Room and Booking present
+CL2  PASS  Booking is associated with Student and with Room
+CL3  PASS  every association has multiplicities at both ends
+CL4  PASS  1 student / 1 room per booking, 0..* bookings per student and per room
+CL5  PASS  every inheritance / composition / aggregation carries a ' why: comment (or there are none)
+CL6  PASS  only domain concepts in the class diagram
+CL7  PASS  attributes needed by R1-R3 are present
+CL8  PASS  a note states R2 (no overlapping active bookings)
+AC1  PASS  initial and final nodes present
+AC2  PASS  separate decisions check R1, R3 and R2 (3 decisions)
+AC3  PASS  every branch has a labelled guard
+AC4  PASS  no parallel paths
+AC5  PASS  confirmation on success, rejection on failure
+AC6  PASS  creation comes after all rule checks
+FI1  PASS  the AI's original output is kept for every diagram
+FI2  PASS  a rendered image for every diagram
+LR1  PASS  §1 setup filled (tool and model recorded)
+LR2  PASS  5 prompts pasted in §2
+LR3  PASS  3 use-case findings in §3
+LR4  PASS  §4 relationships read both ways, 3 assumption(s) declared
+LR5  PASS  3 behaviour-diagram findings in §5
+LR6  PASS  11 critique issues with a verdict
+LR7  PASS  5 change-log rows covering all three diagrams
+CS1  PASS  6 approved stories
+CS2  PASS  §7 traces R1-R4 into the diagrams
+CS3  PASS  every use case traces to an approved story
+
+SUMMARY pass=35 fail=0 error=0
+A FAIL you report and explain in lab-report.md §9 costs you nothing. One you hide costs the criterion.
+
 ```
 
-**FAILs I am keeping, and why:** <one line per check ID, or "none">
+**FAILs I am keeping, and why:** none
 
 ---
 
@@ -198,3 +238,5 @@ reached the code if nobody had reviewed it? What did the critique find that you 
 did it claim that was false? Be specific: "the AI got the multiplicities wrong" is worth nothing;
 "the AI put 1..* on the Booking end, which says every room must already have a booking" is worth
 everything.>
+
+The resulting class diagram was the least developed sketch. The AI provided Student with the operations volumeAvailability, bookRoom and cancelBooking.Student has the operations volumeAvailability, bookRoom and cancelBooking provided by the AI. Use cases, not a student's behaviour, are US-01 (march down a corridor), US-02 (sequence through a myriad of websites on the Internet), and US-03 (walk the dog). Otherwise, bookRoom would have had to implement R1 to R3, and the check would have been in the wrong class. The AI also added in a dashed dependency between the two from Booking to BookingStatus, which repeated the attribute status, and only listed R2 so R1 and R3 were invisible. It has introduced a Show booking confirmed action into the activity diagram which R4 doesn't request at the screen step. In a new chat, the critique system revealed there were two things missing from my use case note for US-03: R2 is missing from my note, yet it is included in the approved table; likewise, the text for R1 rejection did not indicate that 0 is not accepted and 2 is a maximum. It also made 2 incorrect assumptions – A1 is not mentioned anywhere, it is mentioned in section 4.3 - which it never saw – and 2 activities per story was the brief's requirement. I rejected both.

@@ -10,13 +10,13 @@
 
 | Field | Value |
 | --- | --- |
-| Name | <your name> |
-| Group | <your group> |
-| AI assistant | <e.g. Claude, ChatGPT, Gemini, DeepSeek, Grok> |
-| Exact model | <the exact model name with its version, e.g. claude-sonnet-4-5> |
-| Renderer | <PlantUML web server / VS Code extension / IntelliJ plugin / local jar> |
-| Behaviour diagram | <sequence / activity / both> |
-| Stories used | <my week-03 stories, revised / the reference set from README §3> |
+| Name | Arsen Shakirov |
+| Group | 16:00-19:00 |
+| AI assistant | Claude |
+| Exact model | claude-sonnet-5-5 |
+| Renderer | PlantUML web server |
+| Behaviour diagram | activity |
+| Stories used | my week-03 stories, revised |
 
 ---
 
@@ -28,31 +28,31 @@ AI's first replies are saved as files in `models/original/` — do not paste the
 ### 2.1 Task 1 — use-case prompt
 
 ```text
-<paste>
+Using the supplied scenario and approved stories, generate PlantUML for a use-case diagram. Include Student and Administrator outside a named system boundary. Model their goals, show justified associations, and list assumptions. Use include or extend only with a clear reason.
 ```
 
 ### 2.2 Task 2 — class prompt
 
 ```text
-<paste>
+Create a UML domain class diagram in PlantUML for Smart Campus. Start with Student, Room, and Booking. Add attributes, appropriate operations, and association multiplicities. Add other classes only when requirements justify them. Explain each relationship and list assumptions. Avoid unjustified inheritance or composition.
 ```
 
 ### 2.3 Task 3 — behaviour prompt (3A sequence or 3B activity)
 
 ```text
-<paste>
+Generate a UML activity diagram in PlantUML for Book room. Show the initial node, actions, guarded decisions, and final nodes. Check the time range, blocked-room status, and overlapping bookings. Show confirmation after success and rejection after failure. Use branches rather than parallel paths unless concurrency is required.
 ```
 
 ### 2.4 Focused correction prompts (if you sent any)
 
 ```text
-<paste, or write "none">
+none
 ```
 
 ### 2.5 Critique prompt
 
 ```text
-<paste>
+Compare my diagrams with the requirements. Identify missing rules, inconsistent names, and unjustified elements. Cite each issue and propose a specific correction.
 ```
 
 ---
@@ -89,8 +89,8 @@ One row per association in your **revised** class diagram.
 
 ### 4.3 Assumptions
 
-- A1: <an assumption you had to make — e.g. what happens to existing bookings when a room is blocked>
-- <A2 ...>
+- A1: Touching bookings (one ends at 12:00, the next starts at 12:00) do NOT overlap under R2; back-to-back bookings are allowed, because a booking occupies the half-open interval [start, end). This matches my Week 03 acceptance criteria.
+- A2: Blocking a room does not cancel bookings that already exist; R3 only stops NEW bookings, because R3 says "cannot accept a new booking" and the scenario says nothing about removing existing ones. Existing bookings stay active.
 
 ### 4.4 Findings
 

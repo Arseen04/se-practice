@@ -1,0 +1,34 @@
+@startuml
+title Smart Campus - Use-case diagram (revised)
+left to right direction
+
+actor Student
+actor Administrator
+
+rectangle "Smart Campus Room Booking" {
+  usecase "View availability"      as UC1
+  usecase "Book room"              as UC2
+  usecase "Cancel booking"         as UC3
+  usecase "Block or unblock room"  as UC4
+  usecase "Review usage"           as UC5
+  usecase "Send confirmation"      as UC6
+
+  ' why: R4 and US-04 - confirmation is produced at the end of the successful booking flow only; it is a system outcome, so no actor starts it
+  UC2 ..> UC6 : <<include>>
+}
+
+Student --> UC1
+Student --> UC2
+Student --> UC3
+
+Administrator --> UC4
+Administrator --> UC5
+
+note right of UC1 : US-01
+note right of UC2 : US-02 (R1, R2, R3)
+note right of UC3 : US-03 (own bookings only)
+note right of UC4 : US-05 (R3)
+note right of UC5 : US-06
+note right of UC6 : US-04 (R4)
+
+@enduml

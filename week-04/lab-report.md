@@ -59,15 +59,15 @@ Compare my diagrams with the requirements. Identify missing rules, inconsistent 
 
 ## 3. Task 1 — use-case review
 
-**Assumptions the AI listed:** <one line each, or "the AI listed none" — that is a finding too>
+**Assumptions the AI listed:** (1) Send confirmation has no actor link, because under R4 it is an outcome of a successful booking, not a goal a student starts. (2) Block or unblock room is one use case, because both actions are one administrator goal (US-05). (3) Only the Student cancels, and only their own bookings (US-03). (4) There is no extend, because nothing in the stories is an optional addition to another goal. (5) Validation (R1, R2, R3) is part of Book room and not its own use case. (6) What happens to existing bookings when a room is blocked, and whether back-to-back bookings overlap, are not modeled. The AI only listed these two open questions and did not decide them.
 
-At least **two** findings. A finding names the element, the problem and the rule or story that
-proves it is a problem.
+At least **two** findings. A finding names the element, the problem and the rule or story that proves it is a problem.
 
 | # | Element | Problem | Rule or story | Fix |
 | --- | --- | --- | --- | --- |
-| 1 | <e.g. Student → Send confirmation> | <what is wrong> | <R4 / US-01 / scenario sentence> | <what you changed> |
-| 2 | <element> | <problem> | <rule or story> | <fix> |
+| 1 | Book room, include, Send confirmation | An include means the confirmation runs every time Book room runs, but R4 says a confirmation is produced only for a successful booking. A rejected booking (R1, R2 or R3) produces none. The original why comment did not say this. | R4, US-04 | Kept the include, because the course FAQ allows it for confirmation, but rewrote the why comment: the confirmation happens only at the end of the successful booking flow, it is a system outcome, and no actor starts it. |
+| 2 | All six use cases | The diagram has no link to the stories or rules, so a reader cannot see which story justifies each use case. | US-01 to US-06, R1 to R4 | Added a note next to each use case with its story ID and rules. The use case names are unchanged. |
+| 3 | Send confirmation and the actor Student | US-04 is written from the student's point of view (I want to receive a confirmation), but the Student has no association with Send confirmation, so story and diagram look inconsistent. | US-04, R4 | Decision: no association is drawn. The student receives the result but does not start it, and linking an actor to the confirmation would model a system action as a user goal. The original diagram already had no link, so this is a deliberate decision, not a change. |
 
 ---
 

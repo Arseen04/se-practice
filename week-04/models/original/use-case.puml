@@ -1,0 +1,27 @@
+@startuml
+title Smart Campus - Use-case diagram
+left to right direction
+
+actor Student
+actor Administrator
+
+rectangle "Smart Campus Room Booking" {
+  usecase "View availability"      as UC1
+  usecase "Book room"              as UC2
+  usecase "Cancel booking"         as UC3
+  usecase "Block or unblock room"  as UC4
+  usecase "Review usage"           as UC5
+  usecase "Send confirmation"      as UC6
+
+  ' why: R4 - every successful booking produces a confirmation, so it is part of Book room, not a separate goal
+  UC2 ..> UC6 : <<include>>
+}
+
+Student --> UC1
+Student --> UC2
+Student --> UC3
+
+Administrator --> UC4
+Administrator --> UC5
+
+@enduml

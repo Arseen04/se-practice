@@ -1,0 +1,46 @@
+@startuml
+title Smart Campus - Domain class diagram
+
+class Student {
+  - studentId : String
+  - name : String
+  + viewAvailability(start : DateTime, end : DateTime) : List<Room>
+  + bookRoom(room : Room, start : DateTime, end : DateTime) : Booking
+  + cancelBooking(booking : Booking) : void
+}
+
+class Room {
+  - roomId : String
+  - name : String
+  - blocked : boolean
+  + isAvailable(start : DateTime, end : DateTime) : boolean
+  + block() : void
+  + unblock() : void
+}
+
+class Booking {
+  - bookingId : String
+  - start : DateTime
+  - end : DateTime
+  - status : BookingStatus
+  + durationMinutes() : int
+  + overlaps(other : Booking) : boolean
+  + cancel() : void
+}
+
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+}
+
+Student "1" -- "0..*" Booking : makes >
+Room "1" -- "0..*" Booking : is reserved by >
+Booking ..> BookingStatus : status
+
+note right of Booking
+  R2: active bookings for the same room
+  must not overlap. This cannot be
+  expressed by a multiplicity.
+end note
+
+@enduml

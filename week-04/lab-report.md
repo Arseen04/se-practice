@@ -79,37 +79,45 @@ One row per association in your **revised** class diagram.
 
 | Association | Read left → right | Read right → left | Multiplicities |
 | --- | --- | --- | --- |
-| <Student — Booking> | <one student makes 0..* bookings> | <each booking belongs to exactly 1 student> | <1 / 0..*> |
-| <Room — Booking> | <...> | <...> | <...> |
+| Student — Booking (makes) | One student makes 0..* bookings. | Each booking belongs to exactly 1 student. | 1 / 0..* |
+| Room — Booking (is reserved by) | One room is reserved by 0..* bookings over time. | Each booking is for exactly 1 room. | 1 / 0..* |
 
 ### 4.2 Constraints the multiplicities cannot show
 
-- R2: <how your diagram states it — which note, on which class>
-- <any other rule that is not visible in multiplicities>
+- R2: a note on Booking says that active bookings for the same room must not overlap and that back-to-back bookings are allowed. A multiplicity cannot express this.
+- R1: the same note on Booking states that the start is in the future and the duration is above 0 and at most 2 hours (attributes start and end).
+- R3: a note on Room states that a blocked room accepts no new booking and that existing bookings stay active (attribute blocked).
 
 ### 4.3 Assumptions
 
 - A1: Touching bookings (one ends at 12:00, the next starts at 12:00) do NOT overlap under R2; back-to-back bookings are allowed, because a booking occupies the half-open interval [start, end). This matches my Week 03 acceptance criteria.
 - A2: Blocking a room does not cancel bookings that already exist; R3 only stops NEW bookings, because R3 says "cannot accept a new booking" and the scenario says nothing about removing existing ones. Existing bookings stay active.
+- A3: The checks in Book room run in the order R1, R3, R2, because the checks on the request itself come first and the check that needs the stored bookings comes last.
 
 ### 4.4 Findings
 
 | # | Element | Problem | Rule or story | Fix |
 | --- | --- | --- | --- | --- |
-| 1 | <element> | <problem> | <rule or story> | <fix> |
+| 1 | Student operations viewAvailability, bookRoom, cancelBooking | These are use cases placed as methods on an entity. bookRoom would have to enforce R1 to R3, which a Student does not own. | US-01, US-02, US-03, R1 to R3 | Removed all three operations. Student keeps only studentId, and the validation belongs to a design component. |
+| 2 | Dashed dependency from Booking to BookingStatus | It repeats the attribute status of type BookingStatus, and a dependency without multiplicity is the wrong kind of relationship here. | R2, US-03 | Removed the arrow. The enum stays as the type of Booking.status. |
+| 3 | Notes on Booking and Room | Only R2 was stated. R1 (future start, duration above 0 and at most 2 hours) and R3 (blocked room) were not visible, and the R2 note did not say that back-to-back bookings are allowed. | R1, R2, R3, assumption A1 | Extended the Booking note with R1 and the back-to-back rule and added a note on Room for R3. |
+| 4 | Student.name and Room.name | No rule or story needs these attributes. | R1 to R4, US-01 to US-06 | Removed both attributes. |
 
 ---
 
 ## 5. Task 3 — behaviour diagram review
 
-**Option chosen and why:** <3A sequence / 3B activity — one sentence on why>
+**Option chosen and why:** 3B activity, because the rules R1, R3 and R2 are sequential checks on one request, which a flow with one decision per rule shows directly.
 
-**Design components added beyond the domain model:** <name each one, e.g. `BookingService` —
-what it does in one line; write "none" for an activity diagram>
+**Design components added beyond the domain model:** none
+
+What I checked and found correct in the original: three separate decisions for R1, R3 and R2, no fork, labelled guards on every branch, the booking is created only after the last check, and nothing is saved on a rejection path. The status ACTIVE matches BookingStatus in the class diagram, and Send confirmation after Create booking matches the include in the use-case diagram.
 
 | # | Element | Problem | Rule or story | Fix |
 | --- | --- | --- | --- | --- |
-| 1 | <element> | <problem> | <rule or story> | <fix> |
+| 1 | Action Show booking confirmed | It repeats the confirmation of the action before it and is a screen action. R4 only says a successful booking produces a confirmation. | R4, US-04 | Removed it. One action, Send confirmation to student (R4), remains. |
+| 2 | The three Reject booking actions | The R1 reject said only invalid time range, and none of the rejects named its rule, so it is unclear which rule failed. | R1, R2, R3 | Reworded each reject to name its rule and reason. |
+| 3 | Order of checks and touching bookings | The check order R1, R3, R2 decides which reason the student sees when several rules fail, and the back-to-back decision matters for R2. Both were only in the text and not on the diagram. | R1, R2, R3, assumption A1 | Added a note after the first action stating the order, A1 and that nothing is saved on a rejection path. |
 
 ---
 
@@ -119,10 +127,19 @@ Run the critique prompt once, on all your revised diagrams together. At least **
 critique is another claim to evaluate, not a verdict: reject what is wrong and say why.
 
 | # | Issue the AI raised | Element it cited | Verdict | Why |
+| # | Issue the AI raised | Element it cited | Verdict | Why |
 | --- | --- | --- | --- | --- |
-| 1 | <issue> | <element> | <accept / reject> | <your reason> |
-| 2 | <issue> | <element> | <accept / reject> | <your reason> |
-| 3 | <issue> | <element> | <accept / reject> | <your reason> |
+| 1 | R4 is absent from the class diagram | Booking note in class.puml | accept | US-04 maps to R4 and the other two diagrams show it. A note line adds the trace without a new class, because the confirmation is behaviour and not state. |
+| 2 | US-03 maps to R2 but the diagrams do not say that a cancelled booking drops out of R2 | UC3 note in use-case.puml, cancel() in class.puml | accept | The approved table lists US-03 with R2, but my note said only own bookings only. I added R2 to the note and one line on cancel() saying only ACTIVE bookings count for R2. |
+| 3 | Add a cancel flow as another activity diagram | Activity diagram | reject | The task asks for exactly one behaviour diagram. The critic assumed one diagram per story, which the brief does not say. |
+| 4 | Own bookings only is not enforced in the flow, add a precondition | UC3 note | reject | The association Student 1 to 0..* Booking already shows that each booking belongs to exactly one student, and no cancel flow is modeled. A precondition would repeat it. |
+| 5 | US-06 has no support in the class diagram | Class diagram | reject | US-06 has no rule and no new state. Usage is derived from Booking, and a class diagram models state, not every story. |
+| 6 | Administrator is an actor but not a class | use-case.puml and class.puml | reject | The critic itself says no class is needed. An actor does not have to be a domain class, and a note would be noise. This is not a naming inconsistency. |
+| 7 | Assumption labels are inconsistent and A1 is not defined | Activity note, class note | accept | Partly. The IDs were missing or unexplained in the diagrams, so I added IDs. The claim that A1 is not defined anywhere is false, because it is defined in lab-report section 4.3, which the critic did not see. I kept my numbering, A1 touching bookings and A2 blocking, and added A3 for the check order. |
+| 8 | The R1 rejection text is ambiguous at the boundaries | Reject action for R1 in activity.puml | accept | Duration outside 0 to 2 hours does not say that 0 is rejected and exactly 2 hours is allowed. The text now says not above 0 or over 2 hours. |
+| 9 | The R2 rejection text is narrower than the rule | Reject action for R2 in activity.puml | accept | R2 rejects any overlap, not only a taken slot. The text now says overlaps an active booking. |
+| 10 | Existing bookings stay active has no source | Room note in class.puml | accept | R3 says nothing about existing bookings, so it is an assumption. I labeled it A2, as declared in section 4.3. I did not ask the instructor, because the task accepts either answer if it is declared. |
+| 11 | Rename View availability and Review usage | Use cases UC1 and UC5 | reject | The critic calls it cosmetic. The names match the scenario wording and Week 03, and renaming gains nothing. |
 
 ---
 
@@ -133,11 +150,16 @@ diagram**, spelled exactly as in the diagram, with the story ID it traces to.
 
 | Requirement / story | Use case | Classes | Behaviour element |
 | --- | --- | --- | --- |
-| R1 | <use case> | <classes and attributes> | <message, guard or decision> |
-| R2 | <use case> | <classes, note> | <message, guard or decision> |
-| R3 | <use case> | <classes and attributes> | <message, guard or decision> |
-| R4 | <use case> | <classes> | <message or action> |
-| <US-01> | <Book room> | <Student, Booking, Room> | <message or action> |
+| R1 | Book room | Booking (start, end, durationMinutes()), note on Booking | Decision on R1 and the R1 reject action |
+| R2 | Book room, Cancel booking | Booking (status, overlaps()), BookingStatus, note on Booking | Decision on R2 and the R2 reject action |
+| R3 | Block or unblock room, Book room | Room (blocked, block(), unblock()), note on Room | Decision on R3 and the R3 reject action |
+| R4 | Send confirmation | Booking (note R4), no confirmation class | Action Send confirmation to student (R4) after Create booking |
+| US-01 | View availability | Room (isAvailable()), Booking | Not part of the Book room flow |
+| US-02 | Book room | Student, Booking, Room | The whole activity diagram, Create booking after the three decisions |
+| US-03 | Cancel booking | Student, Booking (cancel(), status), BookingStatus | Not part of the Book room flow |
+| US-04 | Send confirmation | Booking (note R4) | Action Send confirmation to student (R4) |
+| US-05 | Block or unblock room | Room (blocked, block(), unblock()) | Decision on R3 reads the blocked flag |
+| US-06 | Review usage | Booking (start, end, status) grouped by Room, no extra class | Not part of the Book room flow |
 
 ---
 
@@ -148,9 +170,11 @@ behaviour diagram). "Before" is what the AI produced; "After" is what you submit
 
 | # | Diagram | Before (AI's original) | After (your revision) | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | <use case> | <before> | <after> | <rule, story or notation reason> |
-| 2 | <class> | <before> | <after> | <reason> |
-| 3 | <sequence / activity> | <before> | <after> | <reason> |
+| 1 | use case | No notes, so no use case showed its story, and the why comment did not say that confirmation happens only on success. | Notes with story IDs and rules (US-03 with R2). The why comment now says confirmation comes only at the end of a successful booking. | R4, US-04 |
+| 2 | class | Student had three operations that are use cases, name attributes, and a dashed arrow to BookingStatus. | Student keeps studentId. The name attributes and the arrow are removed. | US-01 to US-03 |
+| 3 | class | Only an R2 note. | Notes for R1, R2 with A1, cancel, and R4, and an R3 note on Room with A2. | R1 to R4 |
+| 4 | activity | An extra action Show booking confirmed, rejects without rule IDs, and no note. | Action removed, each reject names its rule, and a note gives the check order A3, A1 and that nothing is saved on rejection. | R4, R1 to R3 |
+| 5 | activity | R1 reject said outside 0 to 2 hours, and R2 reject said time slot already taken. | R1 reject says not above 0 or over 2 hours, and R2 reject says overlaps an active booking. | R1, R2 |
 
 ---
 

@@ -26,7 +26,7 @@ Administrator --> UC5
 
 note right of UC1 : US-01
 note right of UC2 : US-02 (R1, R2, R3)
-note right of UC3 : US-03 (own bookings only)
+note right of UC3 : US-03 (R2; own bookings only)
 note right of UC4 : US-05 (R3)
 note right of UC5 : US-06
 note right of UC6 : US-04 (R4)

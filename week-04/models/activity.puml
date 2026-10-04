@@ -4,7 +4,7 @@ title Smart Campus - Activity diagram: Book room (revised)
 start
 :Student submits booking request (room, start, end);
 note right
-  Checks run in the order R1, R3, R2 (assumption).
+  Checks run in the order R1, R3, R2 (A3).
   Back-to-back bookings do not overlap (A1).
   Nothing is saved on any rejection path.
 end note
@@ -16,7 +16,7 @@ if (Start in the future, duration above 0 and at most 2 hours? (R1)) then ([yes]
       :Send confirmation to student (R4);
       stop
     else ([yes])
-      :Reject booking - R2, time slot already taken;
+      :Reject booking - R2, overlaps an active booking;
       stop
     endif
   else ([yes])
@@ -24,7 +24,7 @@ if (Start in the future, duration above 0 and at most 2 hours? (R1)) then ([yes]
     stop
   endif
 else ([no])
-  :Reject booking - R1, start not in the future or duration outside 0 to 2 hours;
+  :Reject booking - R1, start not in the future or duration not above 0 or over 2 hours;
   stop
 endif
 

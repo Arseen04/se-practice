@@ -34,13 +34,15 @@ Room "1" -- "0..*" Booking : is reserved by >
 note right of Booking
   R1: start is in the future and 0 < duration <= 2 hours.
   R2: active bookings for the same room must not overlap.
-  Back-to-back bookings (end = next start) are allowed.
+  Back-to-back bookings (end = next start) are allowed (A1).
   R2 cannot be expressed by a multiplicity.
+  cancel(): status becomes CANCELLED; only ACTIVE bookings count for R2.
+  R4: a successfully created booking produces a confirmation (US-04).
 end note
 
 note right of Room
   R3: while blocked is true, the room accepts no new booking.
-  Existing bookings stay active.
+  Existing bookings stay active (assumption A2).
 end note
 
 @enduml

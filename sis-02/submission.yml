@@ -1,0 +1,36 @@
+# SIS #02 — declaration. Fill personal identity and final commit after final validation.
+schema: 1
+assignment: "sis-02"
+
+student:
+  name: "REPLACE WITH YOUR REGISTERED NAME"
+  student_id: "REPLACE WITH YOUR STUDENT ID"
+  group: "REPLACE WITH YOUR GROUP"
+  github: "REPLACE WITH YOUR GITHUB USERNAME"
+
+assistant:
+  tool: "ChatGPT"
+  model: "GPT-6"
+
+checker:
+  pass: 44
+  fail: 0
+  error: 0
+  commit: "RUN CHECKER, THEN SET git rev-parse --short HEAD"
+
+counts:
+  stories: 3
+  criteria: 6
+  exchanges: 4
+  review_decisions: 3
+  source_checks: 2
+  explanation_words: 269
+  reflection_words: 199
+
+walkthroughs:
+  T1: pass
+  T2: pass
+  T3: pass
+  T4: pass
+
+known_fails: []

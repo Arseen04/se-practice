@@ -163,9 +163,9 @@
 
 ### B1 — Requirements (Prompt A)
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
+- **Tool:** Claude
+- **Model:** Sonet 5.5
+- **Date:** 18.10.26
 - **Purpose:** draft 3 user stories and 6 acceptance criteria
 
 <!-- Model: the exact model with its version, as the tool shows it (e.g. "GPT-5 Thinking",
@@ -175,13 +175,22 @@
 **Prompt:**
 
 ~~~~text
-(paste here)
+Act as a requirements analyst. Use only this course registration scenario and rules R1–R5: A student browses an electronic course catalog, chooses a course offering and requests registration. Each offering has a limited number of places. A Course describes a subject. A CourseOffering is one scheduled section in one semester. Registration always targets a specific offering. Assume that the student is signed in, the selected offering exists, and its capacity is a positive whole number. Exclude payments, prerequisites, timetable clashes, waiting lists and cancellation. Use fictional students and courses.
+R1. Catalog: Show the course code, title, offering and available places for one semester.
+R2. Capacity: Recheck current availability when registering. Enrollment must never exceed the offering's capacity.
+R3. Duplicates: A student may have at most one enrollment in the same offering. Reject a repeat request.
+R4. Success: Create exactly one Enrollment linking the student and offering, update availability and return a confirmation.
+R5. Rejection: Explain "course full" or "already enrolled". Create no enrollment and leave the enrollment count unchanged.
+My initial assumptions are <<1. Available places equal the capacity of an offering minus the number of its existing enrollments.
+2. If two students request the last place at the same time, only one succeeds and the other gets a "course full" answer.>>.
+Draft 3 user stories and 2 Given / When / Then acceptance criteria for each. Use IDs US-01 to US-03 and AC-01 to AC-06. Map each criterion to rule IDs.
+Cover normal and rejection behavior. List uncertainty separately. Do not add excluded features or invent university policies.
 ~~~~
 
 **Response:**
 
 ~~~~text
-(paste here)
+- **Given** LUN205 "Orbital Folklore", Section B, has capacity 2 and 2 enrollments,- **When** the student opens the catalog for its semester,- **Then** the catalog shows LUN205 Section B with 0 available places (2 − 2), not a negative number or a blank. **AC-03 (R2, R3, R4)**- **Given** Mira Okafor has no enrollment in LUN101 Section A, and the offering has 18 available places when the request is processed,- **When** Mira requests registration for that offering,- **Then** exactly one Enrollment linking Mira and LUN101 Section A is created, available places drop to 17, and a confirmation is returned. **AC-04 (R2, R4)**- **Given** LUN310 "Comet Tail Acoustics", Section A, has capacity 1 and 0 enrollments, and Jonas Petrov is not enrolled in it,- **When** Jonas requests registration,- **Then** one Enrollment is created, enrollments equal capacity (1 of 1), available places are 0, and a confirmation is returned. **AC-05 (R2, R4, R5)**- **Given** LUN205 Section B has capacity 2 and 1 enrollment (1 place left), and neither Lena Ito nor Tomas Varga is enrolled in it,- **When** Lena and Tomas both request registration at the same time,- **Then** exactly one of them receives an Enrollment and a confirmation, the other is rejected with "course full" and gets no Enrollment, and the final enrollment count is 2 (never 3). **AC-06 (R3, R5)**- **Given** Mira Okafor already has an enrollment in LUN101 Section A, and the offering still has available places,- **When** Mira requests registration for the same offering again,- **Then** the request is rejected with the explanation "already enrolled", no second Enrollment is created, and both the enrollment count and available places are unchanged. ## Uncertainties (unresolved, nothing further assumed) 1. **Both rejection reasons at once.** If an offering is full and the student is already enrolled, the rules don't say which explanation to show, or whether to show both. A2 covers only the "full" case for a student who is not enrolled.2. **Full offerings in the catalog.** R1 doesn't say whether full offerings stay visible or can be selected. AC-02 assumes only that they are shown with 0 places.3. **Which simultaneous request wins.** A2 says only one succeeds, but not which one, and "at the same time" is not defined (same instant, overlapping processing). AC-05 deliberately accepts either outcome.4. **A2 is not a rule.** R2 requires that capacity is never exceeded, but "the loser gets 'course full'" is an assumption, so it needs confirmation from the stakeholder.5. **Confirmation content.** R4 requires a confirmation but doesn't specify what it contains.6. **Rejection wording.** R5 quotes "course full" and "already enrolled", but it's unclear whether they must appear verbatim.7. **Semester selection.** R1 says "one semester" but doesn't say how the student chooses it or whether there is a default.8. **Catalog freshness.** R2 requires a recheck only at registration, so it's unclear whether the catalog's availability figure must be live or may be slightly stale.9. **Failure handling.** The rules say nothing about errors or interrupted requests, so no criterion covers them. Excluded and not covered: payments, prerequisites, timetable clashes, waiting lists and cancellation. **Trade-off:** AC-05 now covers the simultaneous case, so the plain "full when the request arrives" case has no separate criterion. I can restore that case as a third criterion for US-03 if you want it, though that would break the two-per-story limit.
 ~~~~
 
 ### B2 — UML drafts (Prompt B)

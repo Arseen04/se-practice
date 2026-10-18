@@ -1,43 +1,47 @@
 @startuml
-title Course registration — sequence (R1–R5)
+title Course registration - sequence (R1-R5)
+
 actor Student
 participant CatalogService
 participant RegistrationService
 database EnrollmentStore
 
 == Catalog browsing (R1) ==
-Student -> CatalogService : browseCatalog(semester)
-CatalogService -> EnrollmentStore : listOfferings(semester, course code, title, capacity, count)
-EnrollmentStore --> CatalogService : offerings and current counts
-CatalogService --> Student : show code, title, offering, available places
+Student -> CatalogService : browse catalog for semester
+CatalogService -> EnrollmentStore : read offerings with course code and title, capacity and enrollment count for semester
+EnrollmentStore --> CatalogService : offerings with counts
+CatalogService --> Student : show code, title, offering and available places
 note right of CatalogService
   A catalog view does not reserve a place.
-  Displayed availability can become stale.
+  The figure shown may be stale by the time
+  the student registers.
 end note
 
-== Select and register ==
+== Registration request ==
 Student -> CatalogService : select offering
 Student -> RegistrationService : register(student, offering)
 
-critical atomic registration: final checks and creation
-  RegistrationService -> EnrollmentStore : existsEnrollment(student, offering)?
-  EnrollmentStore --> RegistrationService : duplicate yes/no
-  RegistrationService -> EnrollmentStore : getCurrentCountAndCapacity(offering)
-  EnrollmentStore --> RegistrationService : current count, capacity
+critical atomic registration
+  RegistrationService -> EnrollmentStore : check duplicate: enrollment exists for student and offering
+  EnrollmentStore --> RegistrationService : exists or not
+  RegistrationService -> EnrollmentStore : read current count and capacity of offering
+  EnrollmentStore --> RegistrationService : count and capacity
 
   alt already enrolled
-    RegistrationService --> Student : reject("already enrolled")
+    RegistrationService --> Student : rejected, already enrolled
   else course full
-    RegistrationService --> Student : reject("course full")
+    RegistrationService --> Student : rejected, course full (count >= capacity)
   else not enrolled and places left
-    RegistrationService -> EnrollmentStore : createEnrollment(student, offering)
-    EnrollmentStore --> RegistrationService : saved Enrollment; count +1
+    RegistrationService -> EnrollmentStore : create Enrollment(student, offering)
+    EnrollmentStore --> RegistrationService : Enrollment saved, count increased by one
     RegistrationService --> Student : confirm registration
   end
+
   note over RegistrationService, EnrollmentStore
-    Duplicate check, current capacity check, and creation are one
-    atomic operation. Competing requests cannot both claim the last place.
-    Rejection paths create no record and do not change the count.
+    The duplicate check, the capacity check and the creation
+    of the Enrollment form ONE atomic operation. No other request
+    can change the count between the check and the creation,
+    so two students cannot take the same last place (R2).
   end note
 end
 @enduml

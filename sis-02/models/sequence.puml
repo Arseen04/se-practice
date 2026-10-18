@@ -1,3 +1,43 @@
-' SIS #02 — your FINAL sequence diagram goes here, as PlantUML (@startuml … @enduml).
-' Start from the AI's original in models/original/sequence.puml, apply your accepted review
-' decisions, then render it to models/img/sequence.png (or .svg). README section 5.
+@startuml
+title Course registration — sequence (R1–R5)
+actor Student
+participant CatalogService
+participant RegistrationService
+database EnrollmentStore
+
+== Catalog browsing (R1) ==
+Student -> CatalogService : browseCatalog(semester)
+CatalogService -> EnrollmentStore : listOfferings(semester, course code, title, capacity, count)
+EnrollmentStore --> CatalogService : offerings and current counts
+CatalogService --> Student : show code, title, offering, available places
+note right of CatalogService
+  A catalog view does not reserve a place.
+  Displayed availability can become stale.
+end note
+
+== Select and register ==
+Student -> CatalogService : select offering
+Student -> RegistrationService : register(student, offering)
+
+critical atomic registration: final checks and creation
+  RegistrationService -> EnrollmentStore : existsEnrollment(student, offering)?
+  EnrollmentStore --> RegistrationService : duplicate yes/no
+  RegistrationService -> EnrollmentStore : getCurrentCountAndCapacity(offering)
+  EnrollmentStore --> RegistrationService : current count, capacity
+
+  alt already enrolled
+    RegistrationService --> Student : reject("already enrolled")
+  else course full
+    RegistrationService --> Student : reject("course full")
+  else not enrolled and places left
+    RegistrationService -> EnrollmentStore : createEnrollment(student, offering)
+    EnrollmentStore --> RegistrationService : saved Enrollment; count +1
+    RegistrationService --> Student : confirm registration
+  end
+  note over RegistrationService, EnrollmentStore
+    Duplicate check, current capacity check, and creation are one
+    atomic operation. Competing requests cannot both claim the last place.
+    Rejection paths create no record and do not change the count.
+  end note
+end
+@enduml

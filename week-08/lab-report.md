@@ -1,7 +1,7 @@
 # Week 08 — Lab report
 
 **Name:** Arsen Shakirov  
-**Group:** not provided  
+**Group:** Monday 16:00–19:00  
 **Date:** 8 November 2026
 
 ## 1. Setup

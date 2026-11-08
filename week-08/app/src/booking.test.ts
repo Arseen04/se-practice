@@ -82,3 +82,14 @@ test('X1 AC1: a request ending exactly at 1440 is available', () => {
 test('X2 AC4: a request touching two bookings is available', () => {
   expect(check(660, 720, { bookings: [{ start: 600, end: 660 }, { start: 720, end: 780 }] })).toBe(true);
 });
+
+test('BUG-A AC4: touching two different endpoint bookings stays available', () => {
+  expect(check(780, 900, { bookings: [{ start: 720, end: 780 }, { start: 900, end: 960 }] })).toBe(true);
+});
+
+test('BUG-B AC5: an available non-touching request does not change bookings', () => {
+  const bookings = [{ start: 600, end: 660 }];
+  const before = structuredClone(bookings);
+  expect(canBook({ start: 800, end: 860, now: 540, blocked: false, bookings })).toBe(true);
+  expect(bookings).toEqual(before);
+});

@@ -23,11 +23,11 @@ counts:
   mutants_detected: 3
 
 checker:
-  pass: 31
+  pass: 33
   fail: 0
-  error: 2
-  commit: "52ec3c3"
-  known_fails: [U1, U2]
+  error: 0
+  commit: "546cdf4"
+  known_fails: []
 
 assumptions:
   invalid_existing_booking: "returns-true"

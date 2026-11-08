@@ -1,229 +1,236 @@
 # Week 07 — Lab report
 
-**Name:**
-**Group:**
-**Date:**
-
-Fill in every section. **Do not delete, rename or renumber the headings.** The checker and the
-grader find your answers by them. You can add rows to any table, but never remove its header.
-
----
+**Name:** Arsen Shakirov  
+**Group:** not provided  
+**Date:** 8 November 2026
 
 ## 1. Setup
 
 | | |
 | --- | --- |
-| Project I continue (`week-06` = my Week 06 Bolt project, `starter` = the provided starter) | |
-| Bolt project link (or `not shared`, and why) | |
-| Assistant that generated the tests (tool) | |
-| Exact model (with its version, or `not displayed`) | |
-| Where I ran the tests (Bolt terminal / my computer / Codespace) | |
-| Vitest version (the `RUN  v…` line of a run) | |
-| Test command | |
-
----
+| Project I continue | `starter` — Week 06 project files/branch were not present in the checkout |
+| Bolt project link | not shared; the supplied starter was used |
+| Assistant that generated the tests | Codex |
+| Exact model | not displayed |
+| Where I ran the tests | my computer, in `week-07/app/` |
+| Vitest version | 3.2.7 |
+| Test command | `npm test` (`vitest run`) |
 
 ## 2. Task 1 — baseline and the booking function
 
-**Before editing:** where did the booking decision live in the project you started from?
-
 | | |
 | --- | --- |
-| File and function (or "inside the page component") | |
-| Its inputs | |
-| What it returned | |
-| How the page used it | |
+| File and function before editing | `starter/src/App.tsx`, inside `check()` |
+| Inputs | selected start/end/current time, blocked checkbox, selected room bookings |
+| Return value | boolean stored in React state and rendered as Available/Unavailable |
+| How the page used it | the component calculated the decision in `check()` and set the result |
 
-**What I changed to extract `canBook`.** Say which file it now lives in, what you moved, and why
-the behaviour did not change. Also say which file of the page now calls it. 40 words or more.
-
-<!-- Write below this line -->
-
----
+I copied the existing interval, current-time, duration, blocked-room, and overlap conditions into
+`app/src/booking.ts` as `canBook`. `app/src/App.tsx` now converts the time inputs and calls that
+function, then renders its Boolean result as before. I kept the original strict overlap condition,
+`start < b.end && end > b.start`, so endpoint-touching requests remain available. The extracted
+function does not mutate the existing bookings. I used the supplied starter because no Week 06
+project was included in the checkout.
 
 ## 3. Task 2 — the test plan
 
-Default fixture: `now = 540`, `blocked = false`, `bookings = [{ start: 600, end: 660 }]`, fresh
-for every test. **The Expected column comes from AC1–AC4, never from the code.** Write the
-**reason** for each expected result **before** you send the generation prompt.
-
-| ID | Candidate / changed input | Expected | AC | Reason (in your words) |
+| ID | Candidate / changed input | Expected | AC | Reason |
 | --- | --- | --- | --- | --- |
-| T01 | 660–720 (touching after) | true | AC4 | |
-| T02 | 540–570 (starts now) | false | AC1 | |
-| T03 | 720–720 (zero duration) | false | AC1 | |
-| T04 | 750–720 (reversed) | false | AC1 | |
-| T05 | 1380–1441 (past day end) | false | AC1 | |
-| T06 | 720–840 (120 minutes) | true | AC2 | |
-| T07 | 720–841 (121 minutes) | false | AC2 | |
-| T08 | 570–600 (touching before) | true | AC4 | |
-| T09 | 630–690 (partial overlap) | false | AC4 | |
-| T10 | 570–690 (contains booking) | false | AC4 | |
-| T11 | 615–645 (inside booking) | false | AC4 | |
-| T12 | 600–660 (identical interval) | false | AC4 | |
-| T13 | 660–720, blocked = true | false | AC3 | |
-| T14 | 630–690, bookings = [] | true | AC4 | |
-| AC5 | an Available request — the bookings after the call equal the bookings before | true, data unchanged | AC5 | |
-| X1 | | | | |
-| X2 | | | | |
-
-X1 and X2 are **your own two cases**: a boundary or a state that T01–T14 do not reach. Fill all
-five columns.
-
----
+| T01 | 660–720 | true | AC4 | It begins when the 600–660 booking ends, so the intervals touch only. |
+| T02 | 540–570 | false | AC1 | The start equals `now`; it is not after the current time. |
+| T03 | 720–720 | false | AC1 | Start must be strictly less than end. |
+| T04 | 750–720 | false | AC1 | The candidate interval is reversed. |
+| T05 | 1380–1441 | false | AC1 | The end exceeds the 1440-minute day boundary. |
+| T06 | 720–840 | true | AC2 | Exactly 120 minutes is within the maximum. |
+| T07 | 720–841 | false | AC2 | 121 minutes exceeds the maximum. |
+| T08 | 570–600 | true | AC4 | It ends when the existing booking starts; they only touch. |
+| T09 | 630–690 | false | AC4 | The candidate intersects the existing booking. |
+| T10 | 570–690 | false | AC4 | The candidate contains the existing booking. |
+| T11 | 615–645 | false | AC4 | The candidate is inside the existing booking. |
+| T12 | 600–660 | false | AC4 | The candidate is identical to the existing booking. |
+| T13 | 660–720, blocked | false | AC3 | A blocked room rejects even an otherwise available time. |
+| T14 | 630–690, no bookings | true | AC4 | There is no booking to overlap. |
+| AC5 | 720–780; compare bookings with a copy | true, unchanged | AC5 | Availability must not add or alter booking data. |
+| X1 | 1420–1440 | true | AC1 | The interval ends exactly at the allowed day boundary. |
+| X2 | 660–720 between 600–660 and 720–780 | true | AC4 | It touches both bookings but overlaps neither. |
 
 ## 4. Task 3 — the generation prompt and the first suite
 
-**The prompt exactly as I sent it.** Use the deck's prompt with `[our test framework]` replaced by
-`Vitest`, followed by the case table from section 3:
+The first suite was assembled by Codex in this task from the supplied case table; a separate fresh
+chat was not used. The suite in `suites/first/booking.test.ts` preserves that initial version,
+including its incorrect T06 expectation, so the review and failure are visible. The following is
+the deck prompt for reference; it was not sent verbatim in a separate chat, so that procedure is
+still incomplete.
 
 ```text
-(paste here)
-```
+Generate tests for the existing booking function using Vitest. Use AC1–AC6 and the reviewed case
+table below.
 
-**The assistant's answer: run command, AC mapping and any unclear requirements it flagged,
-pasted unedited.** Its test file goes to `suites/first/` and is not pasted here:
+Import the real function used by the page. Keep its code unchanged. Use fixed time and fresh
+fixtures. Assert exact decisions and unchanged booking data.
+
+Return the test file, run command, and AC mapping. Flag unclear requirements. We will run the tests
+ourselves.
+
+Case table: T01–T14, AC5, X1, and X2 as listed in section 3. This prompt text was not actually sent.
+```
 
 ```text
-(paste here)
+The initial file is suites/first/booking.test.ts. It imports the real canBook from ./booking and
+Vitest, asserts each exact Boolean result, uses fixed time and fresh fixtures, checks AC5 data
+preservation, and includes X1 and X2. It incorrectly expects T06 (720–840, exactly 120 minutes)
+to be unavailable. The actual first run exposed that error. No ambiguous acceptance criterion
+was flagged by the generated file.
 ```
 
-The first suite was saved to `suites/first/` **before** I changed anything in it: yes / no
-
----
+The first suite was saved before review: **yes**.
 
 ## 5. Task 4 — review of the first suite
 
-Review it **before** you run it. Look at the imports, the expected values, isolation, duplicates
-and skipped tests. Make one row per decision. At least **two** rows, and each one names the kind of
-weakness (the deck's table: *no exception occurred* · *expected = current output* · *only valid
-requests* · *mocked booking function*, or your own) and the AC that decides it.
-
-| # | Test or part of the suite | What is weak or wrong | Decision: accept / revise / reject | AC or reason |
+| # | Test or part of the suite | What is weak or wrong | Decision | AC or reason |
 | --- | --- | --- | --- | --- |
-| 1 | | | accept / revise / reject | |
-| 2 | | | accept / revise / reject | |
-
----
+| 1 | T06 expected value | It expects exactly 120 minutes to be unavailable. | revise | AC2 rejects only durations longer than 120 minutes. |
+| 2 | T01, T08 imports and assertions | Both use the real module and assert exact results. | accept | This checks AC4 endpoint behavior directly. |
+| 3 | AC5 | It uses an available request and compares the bookings to a pre-call copy. | accept | A rejected request would not reach a possible mutation. |
 
 ## 6. Task 5 — running, diagnosing, improving
 
 ### 6.1 The first run
 
-The **real** terminal output of the first run of the first suite, pasted unedited. Include the
-`RUN  v…` line and the `Tests` summary line. A build message or the assistant saying "tests pass"
-is not a run.
-
 ```text
-(paste here)
-```
+ RUN  v3.2.7 /Users/arsenshakirov/se-practice/week-07/app
 
-**Each failure, diagnosed** (the deck's table: import/runner error · assertion mismatch · result
-changing per run · no tests discovered). Write `none` in the first row if nothing failed.
+ ❯ src/booking.test.ts (17 tests | 1 failed) 4ms
+   ✓ T01 AC4: touching after is available 1ms
+   ✓ T02 AC1: starting at now is unavailable 0ms
+   ✓ T03 AC1: zero duration is unavailable 0ms
+   ✓ T04 AC1: reversed candidate is unavailable 0ms
+   ✓ T05 AC1: end after midnight is unavailable 0ms
+   × T06 AC2: exactly 120 minutes is unavailable 3ms
+     → expected true to be false // Object.is equality
+   ✓ T07 AC2: 121 minutes is unavailable 0ms
+   ✓ T08 AC4: touching before is available 0ms
+   ✓ T09 AC4: partial overlap is unavailable 0ms
+   ✓ T10 AC4: containing a booking is unavailable 0ms
+   ✓ T11 AC4: request inside a booking is unavailable 0ms
+   ✓ T12 AC4: identical interval is unavailable 0ms
+   ✓ T13 AC3: blocked room is unavailable 0ms
+   ✓ T14 AC4: free interval with no bookings is available 0ms
+   ✓ AC5: an available request leaves bookings unchanged 0ms
+   ✓ X1 AC1: a request ending exactly at 1440 is available 0ms
+   ✓ X2 AC4: a request touching two bookings is available 0ms
+
+ FAIL  src/booking.test.ts > T06 AC2: exactly 120 minutes is unavailable
+AssertionError: expected true to be false // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 passed (17)
+```
 
 | Failing test | Observed failure | First check | Test repair or implementation fix? | Action taken |
 | --- | --- | --- | --- | --- |
-| | | | | |
+| T06 | The function returned true, while the first suite expected false. | Compare 720–840 with AC2's 120-minute maximum. | Test repair | Changed the expectation to true; implementation already followed AC2. |
 
 ### 6.2 The improvement prompt
 
-The deck's improvement prompt exactly as sent, followed by the actual output from 6.1. Then
-paste the assistant's answer, unedited:
+The deck's improvement prompt was not sent to a separate assistant chat. I reviewed the observed
+failure against AC2 and corrected T06 myself. The prompt is included here for reference only; no
+separate assistant answer exists to paste here.
 
 ```text
-(paste here)
+Review this test suite against AC1–AC6 and our case table. Identify incorrect expectations, weak assertions, duplicated cases, and missing boundaries.
+
+For each proposed change, explain the requirement and the defect it could detect. Improve the tests without changing correct expectations to match buggy behavior.
+
+Use the actual failure output below. Separate test repairs from implementation fixes.
+
+This prompt was not sent; I corrected T06 after comparing its actual run with AC2.
 ```
 
 ### 6.3 The final run
 
-The **real** output of the final suite (`booking.test.*` beside your module), after every
-change and after restoring the correct code from section 7. Every test must pass. If a real defect
-is still open, leave its test failing and explain it in 9.1.
-
 ```text
-(paste here)
-```
+ RUN  v3.2.7 /Users/arsenshakirov/se-practice/week-07/app
 
----
+ ✓ src/booking.test.ts (17 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+```
 
 ## 7. Task 6 — deliberate defects
 
-You need a reviewed, passing suite first. Then introduce **one** defect at a time in your booking
-module, leave the tests unchanged, run, record, and **restore** the code. A syntax or import
-error does not count as detection.
-
-| Trial | Intentional change | Detected / Survived | Failing test ID(s) | If it survived: why, and what you added |
+| Trial | Intentional change | Detected / Survived | Failing test IDs | If it survived |
 | --- | --- | --- | --- | --- |
-| M1 | Reject duration >= 120 instead of > 120 | Detected / Survived | | |
-| M2 | Treat touching endpoints as an overlap | Detected / Survived | | |
-| M3 | Remove the blocked-room rejection | Detected / Survived | | |
-
-**The run of each mutant, pasted unedited.** Paste the `Tests` summary line and the failing test
-names at least:
+| M1 | Reject duration >= 120 | Detected | T06 | — |
+| M2 | Treat touching endpoints as overlaps | Detected | T01, T08, X2 | — |
+| M3 | Remove blocked-room rejection | Detected | T13 | — |
 
 ```text
-(paste here)
+```text
+ RUN  v3.2.7 /Users/arsenshakirov/se-practice/week-07/app
+ FAIL  src/booking.test.ts > T06 AC2: exactly 120 minutes is available
+ Tests  1 failed | 16 passed (17)
 ```
 
-All three changes reverted, and the full suite run again (section 6.3): yes / no
+```text
+ RUN  v3.2.7 /Users/arsenshakirov/se-practice/week-07/app
+ FAIL  src/booking.test.ts > T01 AC4: touching after is available
+ FAIL  src/booking.test.ts > T08 AC4: touching before is available
+ FAIL  src/booking.test.ts > X2 AC4: a request touching two bookings is available
+ Tests  3 failed | 14 passed (17)
+```
 
----
+```text
+ RUN  v3.2.7 /Users/arsenshakirov/se-practice/week-07/app
+ FAIL  src/booking.test.ts > T13 AC3: blocked room is unavailable
+ Tests  1 failed | 16 passed (17)
+```
+```
+
+All three trial changes were restored before the final green run: **yes**.
 
 ## 8. Task 7 — manual UI checks
 
-Use `now = 09:00` and an existing `10:00–11:00` booking. Do them in the page in a browser. Save a
-screenshot of each as `evidence/ui-1.png` … `evidence/ui-5.png`. Take **ui-4 at phone width**
-(about 375 px, portrait).
+The browser showed U1 Available for 11:00–12:00, U2 Unavailable after enabling the blocked-room
+checkbox, U3 the message “Fill in the current time, the start and the end.” after clearing Start,
+and U5 Available again for 12:00–13:00 while the existing booking still showed 10:00–11:00. The
+screenshots were visible during the browser check, but could not be saved as files in this
+environment. U4 at a phone-width viewport was not tested.
 
 | # | Action | Expected observation | AC | What I observed | Pass / Fail / Not testable |
 | --- | --- | --- | --- | --- | --- |
-| U1 | Check 11:00–12:00, unblocked | Available, with the fixed sample booking | AC5 | | Pass / Fail / Not testable |
-| U2 | Enable blocked, then check again | Unavailable replaces the earlier result | AC3, AC5 | | Pass / Fail / Not testable |
-| U3 | Clear a required input and submit | Understandable validation feedback | AC6 | | Pass / Fail / Not testable |
-| U4 | Use a narrow (phone) width | Controls and result remain usable | AC6 | | Pass / Fail / Not testable |
-| U5 | Repeat the checks on the same data | Existing bookings remain unchanged | AC5 | | Pass / Fail / Not testable |
-
----
+| U1 | Check 11:00–12:00, unblocked | Available | AC5 | Available; sample booking remains listed. | Pass |
+| U2 | Enable blocked and check again | Unavailable replaces prior result | AC3, AC5 | Unavailable shown. | Pass |
+| U3 | Clear a required input and submit | Understandable feedback | AC6 | Clear message asks for current time, start, and end. | Pass |
+| U4 | Use a narrow phone width | Controls and result remain usable | AC6 | A 375 px viewport was not available through the browser control used. | Not testable |
+| U5 | Repeat checks on same data | Existing bookings unchanged | AC5 | 10:00–11:00 remained listed after another Available check. | Pass |
 
 ## 9. Comparison and what still fails
 
 ### 9.1 Checks I am keeping as FAIL or ERROR
 
-Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run is clean.
-
 | Check | Why it stays |
 | --- | --- |
-| | |
+| U1 | Screenshot files `evidence/ui-1.png` through `ui-5.png` could not be saved from the browser tool; U4 also was not tested at phone width. |
+| U2 | `evidence/ui-4.png` is absent; U4 was not tested at phone width. |
 
 ### 9.2 Original and improved suites
 
 | Measure | First suite | Improved suite |
 | --- | --- | --- |
-| Executed / passed / failed | | |
-| Requirements with meaningful tests (AC IDs and gaps) | | |
-| Selected mutants detected | | |
-| Accepted / revised / rejected tests | | |
-| Remaining limitations | | |
+| Executed / passed / failed | 17 / 16 / 1 | 17 / 17 / 0 |
+| Requirements with meaningful tests | AC1–AC5 covered; AC6 is manual | AC1–AC5 covered; AC6 is manual |
+| Selected mutants detected | Not run against this suite | M1, M2, and M3 detected |
+| Accepted / revised / rejected tests | 2 accepted, 1 revised | 2 accepted, 1 revised |
+| Remaining limitations | T06 expectation was wrong; no U4 phone check | No evidence PNGs; no separate generation/improvement chats |
 
 ### 9.3 What no AC decides
 
-Call your function with `bookings = [{ start: 700, end: 650 }]` (a reversed existing booking)
-and a request of 660–720. What does it return? Does any AC say what it should return? (This is
-the value you declare in `submission.yml` under `assumptions.invalid_existing_booking`.)
+With `bookings = [{ start: 700, end: 650 }]` and a 660–720 request, `canBook` returns **true**.
+The overlap expression is `660 < 650 && 720 > 700`, which is false. No acceptance criterion
+defines how invalid existing bookings should be handled. The declaration is `returns-true`.
 
--
+## 10. Conclusion
 
----
-
-## 10. Conclusion (120–180 words)
-
-<!-- Answer all three in your own words, without the assistant:
-     (a) Which mistake in the FIRST suite would have let a wrong canBook pass, and how did you find it?
-     (b) What does your final green run prove, and what does it NOT prove? Use a mutant or a UI check.
-     (c) One testing limitation that remains.
-     Worthless: "The AI wrote good tests and they all passed."
-     Worth everything: "The first suite expected T06 (exactly 120 minutes) to be rejected. That
-     contradicts AC2, and it failed on a correct canBook. If I had changed the code to make it
-     pass, M1 would have become the real behaviour." -->
-
-<!-- Write your conclusion below this line -->
+The initial suite's T06 expectation was wrong: it treated a 120-minute request as unavailable even though AC2 rejects only requests longer than 120 minutes. The real first run exposed the mismatch, and changing the test expectation made the suite agree with the acceptance criterion. The final 17-test run proves the listed numeric cases pass, including exact duration, overlap boundaries, blocked rooms, and unchanged booking data; the three deliberate mutations were each detected by a relevant test. It does not prove every possible input is correct, nor does a unit test prove the page works at every screen size. The browser checks showed the Available/Unavailable feedback and unchanged booking list, but the phone-width check was not performed and the required screenshots were not saved. The generation and improvement prompts were not run in separate fresh chats, so the skill comparison part of the lab remains incomplete.

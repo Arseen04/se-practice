@@ -1,0 +1,46 @@
+schema: 1
+week: "08"
+
+student:
+  name: "Arsen Shakirov"
+  student_id: "24B031126"
+  github: "Arseen04"
+
+assistant:
+  tool: "Codex"
+  model: "not displayed"
+
+skill:
+  environment: "prompt-only"
+  invoked: "not-shown"
+
+project:
+  language: "ts"
+  vitest: "3.2.7"
+
+counts:
+  tests_final: 19
+  buggy_failed: 4
+  defects_logged: 2
+  lines_changed: 2
+
+checker:
+  pass: 30
+  fail: 0
+  error: 1
+  commit: "f9dc262"
+  known_fails: [E1]
+
+verdict:
+  skill_helped: "no-difference"
+
+review_findings:
+  - "BUG-A: T01, T08, X2, and the BUG-A regression prove touching endpoints must be allowed"
+  - "BUG-B: AC5 and BUG-B compare an available request with a pre-call copy of bookings"
+  - "T01: the endpoint failure returned before the provided push line, so it could not prove mutation"
+
+honesty:
+  buggy_function_pasted_unchanged: "no"
+  same_input_both_chats: "no"
+  outputs_unedited: "no"
+  ai_usage_disclosed: "yes"

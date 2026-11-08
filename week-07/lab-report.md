@@ -167,7 +167,6 @@ This prompt was not sent; I corrected T06 after comparing its actual run with AC
 | M3 | Remove blocked-room rejection | Detected | T13 | — |
 
 ```text
-```text
  RUN  v3.2.7 /Users/arsenshakirov/se-practice/week-07/app
  FAIL  src/booking.test.ts > T06 AC2: exactly 120 minutes is available
  Tests  1 failed | 16 passed (17)
@@ -185,7 +184,6 @@ This prompt was not sent; I corrected T06 after comparing its actual run with AC
  RUN  v3.2.7 /Users/arsenshakirov/se-practice/week-07/app
  FAIL  src/booking.test.ts > T13 AC3: blocked room is unavailable
  Tests  1 failed | 16 passed (17)
-```
 ```
 
 All three trial changes were restored before the final green run: **yes**.

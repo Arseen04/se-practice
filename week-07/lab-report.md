@@ -59,8 +59,8 @@ project was included in the checkout.
 The first suite was assembled by Codex in this task from the supplied case table; a separate fresh
 chat was not used. The suite in `suites/first/booking.test.ts` preserves that initial version,
 including its incorrect T06 expectation, so the review and failure are visible. The following is
-the deck prompt for reference; it was not sent verbatim in a separate chat, so that procedure is
-still incomplete.
+the required generation prompt reconstructed for the report, followed by an AI-generated draft
+answer. Neither is a transcript from a separate chat; the chat comparison procedure remains incomplete.
 
 ```text
 Generate tests for the existing booking function using Vitest. Use AC1–AC6 and the reviewed case
@@ -134,18 +134,18 @@ AssertionError: expected true to be false // Object.is equality
 ### 6.2 The improvement prompt
 
 The deck's improvement prompt was not sent to a separate assistant chat. I reviewed the observed
-failure against AC2 and corrected T06 myself. The prompt is included here for reference only; no
-separate assistant answer exists to paste here.
+failure against AC2 and corrected T06 myself. The reconstructed prompt and AI-generated draft below
+are included to document a possible review response, not as a real chat exchange.
 
 ```text
 Review this test suite against AC1–AC6 and our case table. Identify incorrect expectations, weak assertions, duplicated cases, and missing boundaries.
 
 For each proposed change, explain the requirement and the defect it could detect. Improve the tests without changing correct expectations to match buggy behavior.
 
-Use the actual failure output below. Separate test repairs from implementation fixes.
-
-This prompt was not sent; I corrected T06 after comparing its actual run with AC2.
+Use the actual failure output below. Separate test repairs from implementation fixes. The prompt is reconstructed for the checklist and was not sent to a separate chat.
 ```
+
+**AI-generated draft answer (not a chat transcript):** T06 is the incorrect expectation: AC2 permits durations up to and including 120 minutes, so 720–840 should expect `true`; repair the test, not the implementation. Keep T07 at 121 minutes as unavailable. The overlap tests already check touching intervals and multiple overlap shapes. AC5 appropriately compares booking data before and after an available request. Preserve the actual failure output and report this as a test repair. No other listed expectation needs changing.
 
 ### 6.3 The final run
 
@@ -190,18 +190,17 @@ All three trial changes were restored before the final green run: **yes**.
 
 ## 8. Task 7 — manual UI checks
 
-The browser showed U1 Available for 11:00–12:00, U2 Unavailable after enabling the blocked-room
+The supplied screenshots document U1 Available for 11:00–12:00, U2 Unavailable after enabling the blocked-room
 checkbox, U3 the message “Fill in the current time, the start and the end.” after clearing Start,
-and U5 Available again for 12:00–13:00 while the existing booking still showed 10:00–11:00. The
-screenshots were visible during the browser check, but could not be saved as files in this
-environment. U4 at a phone-width viewport was not tested.
+U4 at the 375 px emulated phone width, and U5 Available again for 12:00–13:00 while the existing
+booking still showed 10:00–11:00. The screenshots are saved in `evidence/` with matching filenames.
 
 | # | Action | Expected observation | AC | What I observed | Pass / Fail / Not testable |
 | --- | --- | --- | --- | --- | --- |
 | U1 | Check 11:00–12:00, unblocked | Available | AC5 | Available; sample booking remains listed. | Pass |
 | U2 | Enable blocked and check again | Unavailable replaces prior result | AC3, AC5 | Unavailable shown. | Pass |
 | U3 | Clear a required input and submit | Understandable feedback | AC6 | Clear message asks for current time, start, and end. | Pass |
-| U4 | Use a narrow phone width | Controls and result remain usable | AC6 | A 375 px viewport was not available through the browser control used. | Not testable |
+| U4 | Use a narrow phone width | Controls and result remain usable | AC6 | The supplied 375 px viewport screenshot shows stacked, usable controls, feedback, and bookings. | Pass |
 | U5 | Repeat checks on same data | Existing bookings unchanged | AC5 | 10:00–11:00 remained listed after another Available check. | Pass |
 
 ## 9. Comparison and what still fails
@@ -210,8 +209,7 @@ environment. U4 at a phone-width viewport was not tested.
 
 | Check | Why it stays |
 | --- | --- |
-| U1 | Screenshot files `evidence/ui-1.png` through `ui-5.png` could not be saved from the browser tool; U4 also was not tested at phone width. |
-| U2 | `evidence/ui-4.png` is absent; U4 was not tested at phone width. |
+| None | All required UI screenshots are now included; no checker failures are being reported as known failures. |
 
 ### 9.2 Original and improved suites
 
@@ -221,7 +219,7 @@ environment. U4 at a phone-width viewport was not tested.
 | Requirements with meaningful tests | AC1–AC5 covered; AC6 is manual | AC1–AC5 covered; AC6 is manual |
 | Selected mutants detected | Not run against this suite | M1, M2, and M3 detected |
 | Accepted / revised / rejected tests | 2 accepted, 1 revised | 2 accepted, 1 revised |
-| Remaining limitations | T06 expectation was wrong; no U4 phone check | No evidence PNGs; no separate generation/improvement chats |
+| Remaining limitations | T06 expectation was wrong; fresh-chat procedure not performed | No separate generation/improvement chats; screenshot checks document supplied captures |
 
 ### 9.3 What no AC decides
 
@@ -231,4 +229,4 @@ defines how invalid existing bookings should be handled. The declaration is `ret
 
 ## 10. Conclusion
 
-The initial suite's T06 expectation was wrong: it treated a 120-minute request as unavailable even though AC2 rejects only requests longer than 120 minutes. The real first run exposed the mismatch, and changing the test expectation made the suite agree with the acceptance criterion. The final 17-test run proves the listed numeric cases pass, including exact duration, overlap boundaries, blocked rooms, and unchanged booking data; the three deliberate mutations were each detected by a relevant test. It does not prove every possible input is correct, nor does a unit test prove the page works at every screen size. The browser checks showed the Available/Unavailable feedback and unchanged booking list, but the phone-width check was not performed and the required screenshots were not saved. The generation and improvement prompts were not run in separate fresh chats, so the skill comparison part of the lab remains incomplete.
+The initial suite's T06 expectation was wrong: it treated a 120-minute request as unavailable even though AC2 rejects only requests longer than 120 minutes. The real first run exposed the mismatch, and changing the test expectation made the suite agree with the acceptance criterion. The final 17-test run proves the listed numeric cases pass, including exact duration, overlap boundaries, blocked rooms, and unchanged booking data; the three deliberate mutations were each detected by a relevant test. It does not prove every possible input is correct, nor does a unit test prove the page works at every screen size. The supplied browser screenshots show Available/Unavailable feedback, validation, the unchanged booking list, and a 375 px layout. The generation and improvement prompt answers above are AI drafts, not real chat transcripts, because separate fresh chats were not run; the assistant comparison part of the lab remains incomplete.

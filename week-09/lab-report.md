@@ -8,9 +8,9 @@
 
 | | |
 | --- | --- |
-| Assistant (frozen for the whole lab) | Not identified in the supplied chat excerpts; model name and exact model were not shown. |
+| Assistant (frozen for the whole lab) | Codex, as identified by the student |
 | Exact model (or "not displayed") | not displayed |
-| Three fresh chats for R1, R2, R3? (yes / no) | yes, based on the three separately supplied prompt/response excerpts; chat titles and identity were not included |
+| Three fresh chats for R1, R2, R3? (yes / no) | no; all three requests and replies were in this conversation |
 | Python version (`python --version`) | Python 3.9.6 |
 
 ## 2. Your tool definition — a reason for every constraint
@@ -80,7 +80,7 @@ The first checker run was before changing the empty starter schema: **6 PASS, 17
 
 ## 4. Function calling — what the model wrote
 
-The three replies below were supplied as separate prompt/response excerpts and copied into `calls/` without changing the reply text. The supplied prompt excerpts show a placeholder for the tool definition instead of the full JSON, so the required full-definition prompt is not evidenced. The assistant and model names were not visible in the excerpts.
+The replies below are the outputs Codex returned to the three requests in this conversation, copied into `calls/` without changing their text. The prompts contained a literal placeholder where the tool JSON was requested, so the full tool definition was not actually supplied to Codex. These are not three fresh-chat function-calling trials; they record the replies Codex produced from the natural-language requests.
 
 ### R1
 
@@ -169,8 +169,8 @@ Paste this whole output into lab-report.md section 8, and these three numbers in
 
 ## 9. What still fails
 
-No automated check IDs remain FAIL or ERROR after the final run. One human-evaluated assignment limitation remains: although three separate prompt/response excerpts were supplied, they show a placeholder rather than the full tool definition, and the assistant identity is not visible. This is disclosed in sections 1 and 4 and in `AI_USAGE.md`; the excerpts should not be represented as proof that the exact required prompt and frozen model were used.
+No automated check IDs remain FAIL or ERROR after the final run. The human-evaluated function-calling procedure remains incomplete: the prompts in this conversation did not include the full tool definition and were not sent in three fresh chats. The saved answers are genuine Codex replies to the supplied natural-language requests, but they do not prove that the schema was provided to the model. This limitation is disclosed in sections 1 and 4 and in `AI_USAGE.md`.
 
 ## 10. Conclusion (80–150 words)
 
-This lab separates input shape from booking meaning. The schema rejects S03 because `end` is text and S05 because `room` is an extra field. It cannot decide whether a request starts after `now` or lasts no longer than 120 minutes, because those rules compare values. R2 is still a valid tool call even though `blocked=true` means the function should return Unavailable. R3 lacks the current time, precise interval, blocked status, and booking list, so asking is safer than inventing them. The permissions table shows that reading code and running tests are low risk, while resetting tracked work needs a checkpoint and sending `.env` to an unknown server must be blocked. Three separate response excerpts were supplied, but the prompts show a placeholder instead of the full tool definition, and the assistant identity is not visible; this evidence limitation is disclosed.
+This lab separates input shape from booking meaning. The schema rejects S03 because `end` is text and S05 because `room` is an extra field. It cannot decide whether a request starts after `now` or lasts no longer than 120 minutes, because those rules compare values. R2 is still a valid tool call even though `blocked=true` means the function should return Unavailable. R3 lacks the current time, precise interval, blocked status, and booking list, so asking is safer than inventing them. The permissions table shows that reading code and running tests are low risk, while resetting tracked work needs a checkpoint and sending `.env` to an unknown server must be blocked. Codex produced the three saved replies in this conversation. The prompts did not include the full tool definition and were not sent in fresh chats, so these outputs do not demonstrate schema-aware function calling; this limitation is disclosed.

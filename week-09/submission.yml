@@ -16,9 +16,9 @@ student:
   github: "Arseen04"
 
 assistant:
-  tool: "Codex"
+  tool: "assistant not identified in supplied transcripts"
   model: "not displayed"
-  fresh_chats: "no"
+  fresh_chats: "yes"
 
 calls:
   r3: "asked"

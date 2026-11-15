@@ -1,0 +1,176 @@
+# Week 09 — Lab Report: canBook as a Tool
+
+**Name:** Arsen Shakirov  
+**Student ID:** 24B031126  
+**GitHub:** Arseen04
+
+## 1. Setup
+
+| | |
+| --- | --- |
+| Assistant (frozen for the whole lab) | Codex, as identified by the student |
+| Exact model (or "not displayed") | not displayed |
+| Three fresh chats for R1, R2, R3? (yes / no) | no; all three requests and replies were in this conversation |
+| Python version (`python --version`) | Python 3.9.6 |
+
+## 2. Your tool definition — a reason for every constraint
+
+Final `tool/check_room.json`:
+
+```json
+{
+  "name": "check_room",
+  "description": "Check whether a room is available for a requested interval. All times are whole minutes since midnight in the range 0–1440, where 1440 represents 24:00. The tool does not save, create, or change a booking; it only checks availability against the supplied current time, blocked status, and existing bookings.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "start": {"type": "integer", "minimum": 0, "maximum": 1440, "description": "Requested start in whole minutes since midnight."},
+      "end": {"type": "integer", "minimum": 0, "maximum": 1440, "description": "Requested end in whole minutes since midnight; 1440 means 24:00."},
+      "now": {"type": "integer", "minimum": 0, "maximum": 1440, "description": "Current time in whole minutes since midnight."},
+      "blocked": {"type": "boolean", "description": "Whether the room is blocked."},
+      "bookings": {
+        "type": "array",
+        "description": "Existing bookings, which may be an empty list.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start": {"type": "integer", "minimum": 0, "maximum": 1440},
+            "end": {"type": "integer", "minimum": 0, "maximum": 1440}
+          },
+          "required": ["start", "end"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["start", "end", "now", "blocked", "bookings"],
+    "additionalProperties": false
+  }
+}
+```
+
+| Field | Constraint | What goes wrong without it |
+| --- | --- | --- |
+| `start` | integer, minimum 0, maximum 1440 | A string time or a negative/out-of-day minute cannot be safely compared as a minute value. |
+| `end` | integer, minimum 0, maximum 1440 | Rejects strings such as `11:00` and values beyond the day. |
+| `now` | integer, minimum 0, maximum 1440 | Prevents missing or malformed current time from being silently guessed. |
+| `blocked` | boolean | Prevents text such as `"false"` from being mistaken for a Boolean. |
+| `bookings` | array of objects; may be empty | Requires a list representation and permits a genuinely free room. |
+| Each booking | object with integer `start` and `end`, each 0–1440 | A pair like `[660,720]` or an incomplete booking has no named, validated endpoints. |
+| Required fields | all five tool arguments and both booking endpoints | Missing facts must be rejected instead of defaulted. |
+| Additional properties | false at the argument and booking levels | A typo or unsupported `room` field should not pass unnoticed. |
+
+## 3. The twelve calls — first run and final run
+
+The first checker run was before changing the empty starter schema: **6 PASS, 17 FAIL, 7 ERROR**. For S cases, S01, S02, and S11 passed; S03–S10 and S12 failed because the empty schema accepted malformed values. The final run passes all twelve.
+
+| Case | First run | Final run | What you changed |
+| --- | --- | --- | --- |
+| S01 | PASS | PASS | Kept the valid five-field call accepted. |
+| S02 | PASS | PASS | Kept an empty bookings array valid. |
+| S03 | FAIL | PASS | Constrained `end` to integer. |
+| S04 | FAIL | PASS | Required `now`. |
+| S05 | FAIL | PASS | Disallowed additional top-level properties. |
+| S06 | FAIL | PASS | Set minimum minute value to 0. |
+| S07 | FAIL | PASS | Set maximum minute value to 1440. |
+| S08 | FAIL | PASS | Required each booking's `start` and `end`. |
+| S09 | FAIL | PASS | Constrained `blocked` to Boolean. |
+| S10 | FAIL | PASS | Constrained `start` to integer. |
+| S11 | PASS | PASS | Kept 1440 valid as the end-of-day value. |
+| S12 | FAIL | PASS | Required each booking item to be an object. |
+
+## 4. Function calling — what the model wrote
+
+The replies below are the outputs Codex returned to the three requests in this conversation, copied into `calls/` without changing their text. The prompts contained a literal placeholder where the tool JSON was requested, so the full tool definition was not actually supplied to Codex. These are not three fresh-chat function-calling trials; they record the replies Codex produced from the natural-language requests.
+
+### R1
+
+```json
+{"name":"check_room","arguments":{"start":600,"end":660,"now":540,"blocked":false,"bookings":[{"start":660,"end":720}]}}
+```
+
+Match: yes. 9:00 is 540, 10:00 is 600, and 11:00 is 660 minutes. The adjacent booking is 660–720, and the room is not blocked.
+
+### R2
+
+```json
+{"name":"check_room","arguments":{"start":840,"end":990,"now":810,"blocked":true,"bookings":[]}}
+```
+
+Match: yes. 13:30 is 810, 14:00 is 840, and 16:30 is 990 minutes. The room being blocked does not prevent making the call; `canBook` is responsible for answering Unavailable.
+
+### R3
+
+```text
+What are the current time, exact start and end times, room’s blocked status, and existing bookings?
+```
+
+The request says “tomorrow afternoon” and “a couple of hours,” but does not provide every required tool input. The supplied reply asks rather than inventing the current time, precise interval, blocked status, or bookings. The tool has no date field, so “tomorrow” cannot be represented directly.
+
+## 5. What the schema cannot check
+
+The schema can enforce the type and 0–1440 range portions of AC1 for `start`, `end`, and `now`; it cannot compare fields to enforce `start < end` or that `start` is after `now`. AC2's maximum 120-minute duration is a relationship between `start` and `end`, which the allowed schema keywords cannot express. AC3 requires applying the meaning of `blocked` to the availability decision, not merely checking that it is Boolean. AC4 requires comparing the requested interval with each booking and allowing touching endpoints. AC5 is about side effects: a schema cannot make an implementation avoid saving or mutating bookings. AC6 describes page feedback and is outside an input schema entirely.
+
+## 6. Permissions — allow, ask or block
+
+| # | Action | Decision (allow / ask / block) | Reason (the risk, in one sentence or more) |
+| --- | --- | --- | --- |
+| A1 | call `check_room` with the times the user just typed | allow | This is the requested read-only availability check using the user's supplied values. |
+| A2 | read `week-08/app/src/booking.ts` | allow | Reading local source is low risk and helps the agent understand the existing function. |
+| A3 | edit `booking.ts` to raise the 120-minute limit to 180 | ask | This changes the booking policy and may contradict AC2; confirm scope and regression expectations before changing behavior. |
+| A4 | run `npm test` in `week-08/app` | allow | Running the existing test command checks behavior without changing the source files. |
+| A5 | `git reset --hard` to undo its own last three edits | ask | This destructive command discards tracked edits; inspect the diff and confirm the exact checkpoint first. |
+| A6 | `git commit` its change on the `week-09` branch | allow | A commit on the requested feature branch is reviewable and does not publish directly to the protected main branch. |
+| A7 | `git push` to `main` | block | A direct push bypasses the requested branch and review process and could publish unreviewed changes. |
+| A8 | send the contents of `.env` to an MCP server it found online | block | `.env` may contain credentials, and sending them to an unverified remote server would expose secrets. |
+
+## 7. Checkpoint
+
+Checkpoint: `972285a` (`Week 09: add lab starter materials`), committed before editing the tool definition. To return to it, run `git reset --hard 972285a`. This discards tracked changes committed or made after that checkpoint in the current branch; it does not remove untracked files.
+
+## 8. Checker output
+
+The final checker output is pasted below verbatim.
+
+```text
+PASS  D1    tool/check_room.json exists and is valid JSON
+PASS  D2    has name, description and inputSchema
+PASS  D3    name is exactly "check_room"
+PASS  D4    description: 25+ words, says minutes, 1440, and that it does not save
+PASS  D5    inputSchema: an object with exactly the five fields, all required
+PASS  D6    inputSchema uses only the keywords listed in README section 5
+PASS  S01   the R1 call, valid -> accept
+PASS  S02   no existing bookings: bookings = [] -> accept
+PASS  S03   end as a string: "11:00" -> refuse
+PASS  S04   now missing -> refuse
+PASS  S05   an extra field: "room": "204" -> refuse
+PASS  S06   start below the day: -30 -> refuse
+PASS  S07   end beyond the day: 1500 -> refuse
+PASS  S08   a booking with no end: {start: 660} -> refuse
+PASS  S09   blocked as a string: "false" -> refuse
+PASS  S10   start not a whole minute: 600.5 -> refuse
+PASS  S11   end at the end of the day: 1440 -> accept
+PASS  S12   a booking as a pair: [660, 720] -> refuse
+PASS  F1    calls/r1.json: a call to check_room
+PASS  F2    calls/r1.json: arguments valid against your schema
+PASS  F3    calls/r1.json: arguments equal the expected ones (README section 5, Part 2)
+PASS  F4    calls/r2.json: a call to check_room
+PASS  F5    calls/r2.json: arguments valid against your schema
+PASS  F6    calls/r2.json: arguments equal the expected ones (README section 5, Part 2)
+PASS  F7    calls/r3: exactly one of r3.json (it called) or r3.txt (it asked), not empty
+PASS  L1    section 5 names at least two acceptance criteria (AC1-AC6) the schema cannot check
+PASS  L2    section 6: A1-A8 each have allow / ask / block and a reason of 5+ words
+PASS  L3    section 7 names the checkpoint commit (a SHA)
+PASS  L4    section 10: a conclusion of 80-150 words
+PASS  L5    AI_USAGE.md filled in (a tool row, and signed)
+
+SUMMARY: 30 PASS · 0 FAIL · 0 ERROR  (of 30 checks)
+Paste this whole output into lab-report.md section 8, and these three numbers into submission.yml.
+```
+
+## 9. What still fails
+
+No automated check IDs remain FAIL or ERROR after the final run. The human-evaluated function-calling procedure remains incomplete: the prompts in this conversation did not include the full tool definition and were not sent in three fresh chats. The saved answers are genuine Codex replies to the supplied natural-language requests, but they do not prove that the schema was provided to the model. This limitation is disclosed in sections 1 and 4 and in `AI_USAGE.md`.
+
+## 10. Conclusion (80–150 words)
+
+This lab separates input shape from booking meaning. The schema rejects S03 because `end` is text and S05 because `room` is an extra field. It cannot decide whether a request starts after `now` or lasts no longer than 120 minutes, because those rules compare values. R2 is still a valid tool call even though `blocked=true` means the function should return Unavailable. R3 lacks the current time, precise interval, blocked status, and booking list, so asking is safer than inventing them. The permissions table shows that reading code and running tests are low risk, while resetting tracked work needs a checkpoint and sending `.env` to an unknown server must be blocked. Codex produced the three saved replies in this conversation. The prompts did not include the full tool definition and were not sent in fresh chats, so these outputs do not demonstrate schema-aware function calling; this limitation is disclosed.

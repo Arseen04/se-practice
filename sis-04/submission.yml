@@ -40,7 +40,7 @@ checker:                        # from your LAST run of python tests/check_sis.p
   pass: 28
   fail: 2
   error: 3
-  commit:                        # fill with the final report/code commit hash after committing it
+  commit: 189600a
   known_fails: [E1, E2, E3, L9, L10]
 
 review_findings:
@@ -54,7 +54,7 @@ review_findings:
   - "AC5: the test compares serialized catalog data before and after checkRoom to verify no mutation."
 
 honesty:
-  baseline_unchanged:           # yes | no   app/ at the baseline commit is the starting point as it was
-  runs_unedited:                # yes | no   every run in report.md is pasted from a real terminal
-  no_invented_metrics:          # yes | no   every number in section 7 was measured as the row says
+  baseline_unchanged: yes       # app/ at the baseline commit is the starting point as it was
+  runs_unedited: yes            # every run in report.md is pasted from a real terminal
+  no_invented_metrics: yes      # every number in section 7 was measured as the row says
   ai_usage_disclosed: yes       # tool use and the incomplete exchange/reflection evidence are disclosed

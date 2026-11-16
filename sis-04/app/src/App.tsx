@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { checkRoom } from './booking';
 import { filterRooms } from './filter';
 import { EQUIPMENT, ROOMS } from './rooms';
@@ -20,6 +20,12 @@ export default function App() {
 
   const matchingRooms = useMemo(() => filterRooms(ROOMS, { attendees, equipment }), [attendees, equipment]);
   const selectedRoom = matchingRooms.find((room) => room.id === roomId) ?? matchingRooms[0];
+
+  useEffect(() => {
+    if (matchingRooms.some((room) => room.id === roomId)) return;
+    setRoomId(matchingRooms[0]?.id ?? '');
+    setResult(null);
+  }, [matchingRooms, roomId]);
 
   function toggleEquipment(item: string) {
     setResult(null);
@@ -57,7 +63,7 @@ export default function App() {
       </section>
 
       <section className="finder" aria-label="Room finder">
-        <div className="finder-head"><div><span className="step">01 / YOUR NEEDS</span><h2>Make space for your team</h2></div><span className="live"><i /> LIVE DIRECTORY</span></div>
+        <div className="finder-head"><div><span className="step">01 / YOUR NEEDS</span><h2>Make space for your team</h2></div><span className="live"><i /> ROOM CATALOG</span></div>
         <div className="filters">
           <label className="field attendees-field"><span>PEOPLE</span><div className="attendees-control"><button aria-label="Decrease attendees" onClick={() => updateAttendees(Math.max(1, attendees - 1))}>−</button><input aria-label="Attendees" type="number" min="1" value={attendees} onChange={(event) => updateAttendees(Math.max(1, Number(event.target.value) || 1))} /><button aria-label="Increase attendees" onClick={() => updateAttendees(attendees + 1)}>+</button></div></label>
           <fieldset className="field equipment-field"><legend>NEEDED IN THE ROOM</legend><div className="chips">{EQUIPMENT.map((item) => <button key={item} type="button" className={`chip ${equipment.includes(item) ? 'selected' : ''}`} aria-pressed={equipment.includes(item)} onClick={() => toggleEquipment(item)}>{equipment.includes(item) && <b>✓</b>}{item}</button>)}</div></fieldset>

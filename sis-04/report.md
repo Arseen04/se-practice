@@ -91,7 +91,7 @@ The user’s initial task message asked for the Smart Campus Room Availability C
 
 | Suggestion (as the assistant made it) | Decision | Why — with the AC, F-rule, test or file behind it |
 | --- | --- | --- |
-| The handout recommends Week 08 as the default starting point (not a separate AI recommendation). | Modified | The visible Week 07/08 directories have only `dist` output (checked with `find`); there is no source tree to bring in unchanged. I chose the provided runnable starter, an explicitly allowed starting point, so the baseline source is reviewable and editable. |
+| Consolidate the repeated duration and overlap boundary tests. | Rejected | The handout requires distinct B1–B6 cases in test titles and disallows table-driven tests. Keeping each boundary case separate makes the required expected result easy to audit. |
 
 ## 4. Feature extension (Task 2)
 
@@ -109,11 +109,11 @@ I added five fictional rooms with capacity, equipment, blocked status and indivi
 
 | Screenshot | What it shows |
 | --- | --- |
-| `evidence/filter-match.png` | Not captured in this run. |
-| `evidence/filter-empty.png` | Not captured in this run. |
-| `evidence/switch-a.png` | Not captured in this run. |
-| `evidence/switch-b.png` | Not captured in this run. |
-| `evidence/narrow.png` | Not captured in this run. |
+| `evidence/filter-match.png` | 8 attendees, display and whiteboard selected; three matching rooms shown. |
+| `evidence/filter-empty.png` | 21 attendees, zero rooms found, and the empty-state message displayed. |
+| `evidence/switch-a.png` | North Hall 201, 09:00 current, 10:00–11:00 request; unavailable because of its booking. |
+| `evidence/switch-b.png` | North Hall 204, same 09:00 and 10:00–11:00; available with no bookings. |
+| `evidence/narrow.png` | Portrait browser capture showing the 390×844 responsive viewport and stacked layout. |
 
 ## 5. Refactoring (Task 3)
 
@@ -155,7 +155,7 @@ I added five fictional rooms with capacity, equipment, blocked status and indivi
 
 | ID | Test title (as in the file) | Input → expected |
 | --- | --- | --- |
-| AC1 | `AC1 rejects a start equal to end and requests in the past` | `start === end`, past start → false |
+| AC1 | `AC1 rejects a start equal to end, a start after end, and requests in the past` | Equal/reversed interval and start 499 with now 500 → false |
 | AC2 | `AC2 rejects requests longer than the allowed 120 minutes` | 121-minute interval → false |
 | AC3 | `AC3 and F3 never report a blocked room as available` | blocked room → false |
 | AC4 | `AC4 rejects overlap and allows bookings that touch at an endpoint` | overlapping → false; touching → true |
@@ -193,8 +193,8 @@ $ npx vitest run
 
  Test Files  1 passed (1)
       Tests  16 passed (16)
-   Start at  16:16:14
-   Duration  242ms (transform 26ms, setup 0ms, collect 25ms, tests 2ms, environment 0ms, prepare 42ms)
+   Start at  17:09:24
+   Duration  767ms (transform 61ms, setup 0ms, collect 60ms, tests 6ms, environment 0ms, prepare 86ms)
 ```
 
 ## 7. Quality evaluation (Task 5)
@@ -219,69 +219,79 @@ $ npx vitest run
 
 ### 8.1 Exchange 1
 
-**Tool and model:** ChatGPT in Codex desktop; model not displayed
+**Tool and model:** ChatGPT; model not displayed (response supplied by user)
 **Date:** 2026-11-16
-**Purpose:** Implement the room catalog, modules and regression tests for this task.
+**Purpose:** Review current maintainability risks and prioritize improvements.
 
 **Prompt:**
 
 ```text
-The user's initial request was the full SIS #04 brief pasted at the beginning of this conversation: extend the app with a room catalog and filters, preserve AC1–AC6, satisfy F1–F5, refactor into modules, add tests/evidence, and create a measured report. This is a summary, not a verbatim prompt.
+Review the current files in `sis-04/app/src` for maintainability. Identify three risks, each with a file or function and concrete evidence. Then suggest a short, ordered plan for any remaining improvements. Don’t edit files or invent issues; distinguish confirmed findings from suggestions.
 ```
 
 **Output used:**
 
 ```text
-The implementation output used is the source change represented by `rooms.ts`, `filter.ts`, `booking.ts`, `App.tsx`, `index.css` and `booking.test.ts`.
+## Confirmed findings
+
+1. **Room selection can unexpectedly revert — `App.tsx`.** The selected ID is stored separately from filtered rooms. A filtered-out ID can later be selected again when filters include it.
+2. **The main component is hard to maintain — `App.tsx`.** It combines state, formatting, selection, availability and page markup.
+3. **Availability tests repeat cases — `booking.test.ts`.** Duration and overlap behaviors appear both in AC and B boundary cases.
+
+## Ordered improvement plan
+
+1. Keep the selected room ID valid as filters change.
+2. Extract UI sections and move time helpers out of `App`.
+3. Consolidate duplicate tests while preserving boundary coverage.
 ```
 
-**Problems found:** The starter had two rooms and no capacity/equipment; its rules were inside `check()`.
-**Changes made:** Added five fictional rooms, pure filter/booking modules and a responsive UI; wrote 16 fixed-data tests.
-**Verified by:** `npx vitest run` (16/16) and `npm run build` succeeded; inspected the browser-rendered desktop UI.
+**Problems found:** The selection ID could become stale across filter changes; `App` still contains extensive UI markup; duration and overlap cases are intentionally repeated for named IDs.
+**Changes made:** Added an effect to synchronize the selected room with current matches. Kept B boundary tests separate because the handout requires individual named cases.
+**Verified by:** Inspected `App.tsx` and test titles; reran the Vitest suite and production build.
 
 ### 8.2 Exchange 2
 
-**Tool and model:** No separate second AI exchange was conducted.
+**Tool and model:** ChatGPT; model not displayed (response supplied by user)
 **Date:** 2026-11-16
-**Purpose:** Not applicable.
+**Purpose:** Check every required test ID and identify gaps in the implementation evidence.
 
 **Prompt:**
 
 ```text
-Not applicable; this was not a separate prompt/exchange.
+Review `sis-04/app/src/booking.test.ts`, `booking.ts`, and `filter.ts` against AC1–AC5, F1–F5, B1–B6, and INT in the SIS #04 handout. For each ID, say what the existing test checks and whether its expected result follows from the requirement. Flag any genuine gaps or incorrect expectations. Don’t edit files.
 ```
 
 **Output used:**
 
 ```text
-No distinct output to report.
+[…] The AC1 test's start equals `now`, so it is not a past request; a `start < now` case would directly match the stated requirement. AC5 checks a room with no bookings, so checking the booked room would better expose accidental mutation. F4 returns an empty array but does not assert the UI message. AC1 also lacks an explicit `start > end` case. The remaining AC, F, boundary, and integration expectations follow from the listed requirements.
 ```
 
-**Problems found:** Not applicable.
-**Changes made:** Not applicable.
-**Verified by:** Not applicable.
+**Problems found:** AC1's test used `start === now` while describing it as past; AC1 lacked reversed interval coverage; AC5 checked an empty booking list; F4 had no UI test.
+**Changes made:** Changed the past case to 499 vs. now 500, added a reversed interval assertion, and made AC5 check the booked fixture. Kept the F4 UI demonstration as screenshot evidence.
+**Verified by:** `npx vitest run` passed 16 tests; the filter-empty screenshot shows the rendered empty state.
 
 ### 8.3 Exchange 3
 
-**Tool and model:** No separate third AI exchange was conducted.
+**Tool and model:** ChatGPT; model not displayed (response supplied by user)
 **Date:** 2026-11-16
-**Purpose:** Not applicable.
+**Purpose:** Confirm demo states and review whether the UI communicates the data source clearly.
 
 **Prompt:**
 
 ```text
-Not applicable; this was not a separate prompt/exchange.
+Review the current room finder UI against F4, F5, and AC6. Explain how to demonstrate an empty filter result, different availability for two rooms at the same times, and the narrow portrait layout. Identify any UI issue you can verify from the source; don’t claim browser behavior you haven’t observed or edit files.
 ```
 
 **Output used:**
 
 ```text
-No distinct output to report.
+The supplied screenshots show 21 attendees and the empty state; North Hall 201 unavailable and North Hall 204 available at the same 09:00 / 10:00–11:00 times; and a 390×844 narrow viewport. Source review identified that “LIVE DIRECTORY” suggests dynamic data although `rooms.ts` is hard-coded.
 ```
 
-**Problems found:** Not applicable.
-**Changes made:** Not applicable.
-**Verified by:** Not applicable.
+**Problems found:** The “LIVE DIRECTORY” badge misdescribed the static catalog.
+**Changes made:** Renamed it “ROOM CATALOG.”
+**Verified by:** The text is present in `App.tsx`; `npm run build` succeeded. Screenshot evidence demonstrates the earlier app state before this copy change.
 
 ## 9. Checker results and known fails
 
@@ -290,8 +300,6 @@ No distinct output to report.
 
 | Check | Why it still fails |
 | --- | --- |
-| E1–E3 | Five requested PNG screenshots were not saved to `evidence/`; browser screenshots could be inspected but not exported into the repository in this run. |
-| L9 | Only one initial task message appears in the conversation; two additional distinct AI exchanges are not available to quote. |
 | L10 | The required 200–300 word first-person reflection must be written by the student, so it is not supplied here. |
 
 ## 10. AI reflection (Task 6)

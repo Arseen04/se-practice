@@ -12,9 +12,10 @@ const rooms: Room[] = [
 const request = { start: 660, end: 720, now: 540 };
 
 describe('booking and room filtering requirements', () => {
-  test('AC1 rejects a start equal to end and requests in the past', () => {
+  test('AC1 rejects a start equal to end, a start after end, and requests in the past', () => {
     expect(canBook({ ...request, start: 600, end: 600, blocked: false, bookings: [] })).toBe(false);
-    expect(canBook({ ...request, start: 500, end: 550, now: 500, blocked: false, bookings: [] })).toBe(false);
+    expect(canBook({ ...request, start: 601, end: 600, blocked: false, bookings: [] })).toBe(false);
+    expect(canBook({ ...request, start: 499, end: 550, now: 500, blocked: false, bookings: [] })).toBe(false);
   });
 
   test('AC2 rejects requests longer than the allowed 120 minutes', () => {
@@ -32,7 +33,7 @@ describe('booking and room filtering requirements', () => {
 
   test('AC5 does not mutate booking data when checking availability', () => {
     const before = JSON.stringify(rooms);
-    expect(checkRoom(rooms, 'free', request)).toBe(true);
+    expect(checkRoom(rooms, 'busy', request)).toBe(true);
     expect(JSON.stringify(rooms)).toBe(before);
   });
 

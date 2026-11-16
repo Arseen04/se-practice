@@ -34,14 +34,14 @@ counts:                         # the checker prints most of these under --json 
   tests_original: 0
   tests_final: 16
   risks: 3
-  exchanges: 0
+  exchanges: 3
 
 checker:                        # from your LAST run of python tests/check_sis.py
-  pass: 28
-  fail: 2
-  error: 3
-  commit: 189600a
-  known_fails: [E1, E2, E3, L9, L10]
+  pass: 32
+  fail: 1
+  error: 0
+  commit: 8be4090
+  known_fails: [L10]
 
 review_findings:
   # Three or more. One line each, and each one names what it is about: an F-rule (F1-F5),

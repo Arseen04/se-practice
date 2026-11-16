@@ -1,0 +1,16 @@
+@startuml
+title After: separated room finder
+component "main.tsx\nReact mount" as Main
+component "App.tsx\nUI + view state" as App
+component "rooms.ts\nRoom type + catalog" as Rooms
+component "filter.ts\nfilterRooms" as Filter
+component "booking.ts\ncanBook + checkRoom" as Booking
+component "index.css\nresponsive presentation" as CSS
+Main --> App : renders
+Main --> CSS : imports
+App --> Rooms : reads catalog
+App --> Filter : filters catalog
+App --> Booking : checks selected room
+Filter --> Rooms : Room type
+Booking --> Rooms : Room + Booking types
+@enduml

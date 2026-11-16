@@ -1,0 +1,8 @@
+@startuml
+title Before: starter app structure
+component "main.tsx\nReact mount" as Main
+component "App.tsx\nUI + inline room data\n+ time parsing + booking rules" as App
+component "index.css\npage styling" as CSS
+Main --> App : renders
+Main --> CSS : imports
+@enduml

@@ -1,0 +1,312 @@
+# SIS #04 — Report: Evolving the Smart Campus Room Availability Checker
+
+<!-- The ONLY file you write prose in. Keep every numbered heading (## 1. … ## 10.), every
+     ### sub-heading and every **Label:** word — the checker finds your answers by them.
+     Replace every "(write here)" and "(paste here)". Delete these <!-- --> comments if you like. -->
+
+## 1. Setup and starting point
+
+<!-- Model: the exact model with its version, as the tool shows it ("ChatGPT" is a tool, not a
+     model). If the tool does not show it, write: not displayed
+     Starting point: week-08 | week-07 | sis-03 | starter   (README section 3)
+     Baseline commit: the commit that brings your starting point into sis-04/app/ UNCHANGED —
+     git rev-parse --short HEAD right after that commit. It is your "initial version". -->
+
+| Item | Value |
+| --- | --- |
+| Assistant (tool) | ChatGPT (Codex desktop) |
+| Assistant model | not displayed |
+| Starting point | starter |
+| Baseline commit | f4df97d |
+| Language (ts or js) | ts |
+| Vitest version | 3.2.7 |
+| Where I ran the tests | Local terminal, `sis-04/app/` |
+
+### 1.1 Baseline run
+
+<!-- Before you change anything: run the tests of your starting point inside app/ and paste the
+     REAL output. No tests yet (starter, sis-03)? Paste the run anyway: Vitest prints
+     "No test files found". That is your honest "original" number, 0/0. -->
+
+```
+$ npx vitest run
+
+ RUN  v3.2.7 /Users/arsenshakirov/se-practice/sis-04/app
+
+No test files found, exiting with code 1
+
+include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+```
+
+## 2. Context for the assistant
+
+### 2.1 Repository map
+
+<!-- The concise map you gave the assistant: the files that matter and one line each on what
+     they do. A tree is fine:  src/App.tsx — the page, holds the rooms and the form … -->
+
+```text
+sis-04/README.md — assignment instructions and fixed requirements.
+sis-04/starter/package.json — React, TypeScript, Vite and Vitest dependencies/scripts.
+sis-04/starter/src/main.tsx — React mount point and stylesheet import.
+sis-04/starter/src/App.tsx — initial room array, time helpers, availability check and form/result UI.
+sis-04/starter/src/index.css — initial responsive page styling.
+sis-04/starter/vite.config.ts, tsconfig.json, index.html — build and entry configuration.
+```
+
+### 2.2 The context message as sent
+
+<!-- The whole first message of your analysis chat: the map, AC1–AC6, F1–F5 and the constraints
+     (no login, payments, live APIs or database; fictional data only). Unedited. -->
+
+```text
+The user’s initial task message asked for the Smart Campus Room Availability Checker extension and included the assignment requirements. The requirements carried into implementation were AC1–AC6: valid future time ranges, the 120-minute limit, blocked-room rejection, endpoint-safe overlap handling, no booking mutation, and clear responsive feedback. New requirements were F1 capacity at least attendees, F2 every selected equipment item, F3 blocked means unavailable, F4 an empty state, and F5 use the selected room's bookings. Constraints were fictional data only, no login, payments, live APIs or database. No separate fresh analysis chat was opened; the map above was written after inspecting the starter and was not in the initial user message.
+```
+
+## 3. Codebase analysis (Task 1)
+
+### 3.1 Maintainability risks
+
+<!-- At least three, found in YOUR starting code. "Where" names a file or a function(),
+     e.g. src/App.tsx, check(). Evidence is what you saw, not what the assistant said.
+     Priority: High / Medium / Low. -->
+
+| # | Risk | Where (file / function) | Evidence | Priority |
+| --- | --- | --- | --- | --- |
+| 1 | Availability rules are embedded in the React component and cannot be tested independently. | `starter/src/App.tsx`, `check()` | The function converts times, validates, checks blocked state, checks overlaps and sets the result within one function. | High |
+| 2 | Blocked state is a single page checkbox, not room catalog data. | `starter/src/App.tsx`, `blocked` state | `blocked` is separate from the selected room object, so it cannot represent per-room blocked status (AC3/F3). | High |
+| 3 | Catalog cannot support required filtering and the required room metadata. | `starter/src/App.tsx`, `ROOMS` | The array has two rooms, each with only id, name, blocked, bookings; capacity and equipment are absent. | High |
+
+### 3.2 Improvement plan — before editing
+
+<!-- Numbered, in the order you will do it, smallest safe step first. Written BEFORE you change
+     code: the commit that adds this section comes before the commit that changes app/src. -->
+
+1. Add focused Vitest cases for existing booking behavior and new boundaries using the fixed rules; run the baseline suite and retain its output.
+2. Move room shape/data into `src/rooms.ts`, booking decisions into `src/booking.ts`, and capacity/equipment predicates into `src/filter.ts`; run the focused suite after each move.
+3. Connect the page to those modules, implement clear filter and availability feedback, and verify room switching and narrow layout.
+
+### 3.3 One AI suggestion I rejected or modified
+
+| Suggestion (as the assistant made it) | Decision | Why — with the AC, F-rule, test or file behind it |
+| --- | --- | --- |
+| Consolidate the repeated duration and overlap boundary tests. | Rejected | The handout requires distinct B1–B6 cases in test titles and disallows table-driven tests. Keeping each boundary case separate makes the required expected result easy to audit. |
+
+## 4. Feature extension (Task 2)
+
+### 4.1 What I added
+
+<!-- Short: the catalog (how many rooms, which equipment), how the filter is chosen on the page,
+     what the empty state says, what happens to an old result when the room changes. -->
+
+I added five fictional rooms with capacity, equipment, blocked status and individual bookings. Attendees and equipment chips filter the catalog; the empty message is “No rooms fit those needs.” Blocked rooms remain visible with a BLOCKED label and are rejected by the availability rule. Selecting a different room clears an old result before showing the selected room's own bookings.
+
+### 4.2 Demonstration
+
+<!-- One row per screenshot in evidence/. Say what is on it: the filter values, the rooms shown,
+     the room selected, the times entered and the result. -->
+
+| Screenshot | What it shows |
+| --- | --- |
+| `evidence/filter-match.png` | 8 attendees, display and whiteboard selected; three matching rooms shown. |
+| `evidence/filter-empty.png` | 21 attendees, zero rooms found, and the empty-state message displayed. |
+| `evidence/switch-a.png` | North Hall 201, 09:00 current, 10:00–11:00 request; unavailable because of its booking. |
+| `evidence/switch-b.png` | North Hall 204, same 09:00 and 10:00–11:00; available with no bookings. |
+| `evidence/narrow.png` | Portrait browser capture showing the 390×844 responsive viewport and stacked layout. |
+
+## 5. Refactoring (Task 3)
+
+<!-- The diagrams are diagrams/before.puml and diagrams/after.puml (README section 8). -->
+
+### 5.1 Module responsibilities after
+
+| Module or component | Responsibility |
+| --- | --- |
+| `src/rooms.ts` | `Room`/`Booking` types, five fictional rooms and equipment options. |
+| `src/booking.ts` | Pure AC1–AC5 `canBook` rule and room-specific `checkRoom` adapter. |
+| `src/filter.ts` | Capacity and all-equipment filter (`filterRooms`). |
+| `src/App.tsx` + `src/index.css` | Controls, rendered catalog and responsive presentation; imports rules and data. |
+
+### 5.2 Design decisions
+
+<!-- At least two. The alternative is what you could have done instead (often what the assistant
+     proposed). The why names an AC, an F-rule, a test or a risk from 3.1. -->
+
+| Decision | Alternative I did not take | Why |
+| --- | --- | --- |
+| Keep blocked rooms visible and labelled. | Hide blocked rooms from the catalog. | Visibility helps users see the full catalog, while `checkRoom` still rejects a blocked room (AC3/F3). |
+| Keep booking rules pure and pass in the chosen room's bookings. | Keep decisions in component event handlers. | This makes boundary behavior testable without rendering the UI and ties F5 to each room's own data. |
+
+### 5.3 Duplication removed
+
+<!-- One row per duplicated location that is gone. Count what you can point at, nothing else. -->
+
+| Before (file / function, what was repeated) | After (where it lives now) |
+| --- | --- |
+| `App.tsx` `check()` checked `s < e` once to set an error and repeated it in the availability condition. | The duplicate start/end decision was removed from the UI; `src/booking.ts` `canBook()` owns interval validity. |
+
+## 6. Automated tests (Task 4)
+
+### 6.1 Test plan
+
+<!-- One row per required ID. A test may carry several IDs in its title,
+     e.g. test('T06 B1 AC2: exactly 120 minutes is available', …) covers B1 and AC2. -->
+
+| ID | Test title (as in the file) | Input → expected |
+| --- | --- | --- |
+| AC1 | `AC1 rejects a start equal to end, a start after end, and requests in the past` | Equal/reversed interval and start 499 with now 500 → false |
+| AC2 | `AC2 rejects requests longer than the allowed 120 minutes` | 121-minute interval → false |
+| AC3 | `AC3 and F3 never report a blocked room as available` | blocked room → false |
+| AC4 | `AC4 rejects overlap and allows bookings that touch at an endpoint` | overlapping → false; touching → true |
+| AC5 | `AC5 does not mutate booking data when checking availability` | snapshot before/after check → unchanged |
+| F1 | `F1 includes rooms with capacity at least the requested attendees` | 8 attendees → capacities 8, 12, 20 included |
+| F2 | `F2 requires every selected equipment item` | display + whiteboard + video → only `free` |
+| F3 | `AC3 and F3 never report a blocked room as available` | blocked → false |
+| F4 | `F4 returns no rooms for impossible requirements so the UI can show its empty state` | 21 attendees → empty array |
+| F5 | `F5 checks the selected room own bookings for the same request` | same time, busy → false; free → true |
+| B1 | `B1 AC2 accepts a booking exactly 120 minutes long` | 120 minutes → true |
+| B2 | `B2 AC2 rejects a booking 121 minutes long` | 121 minutes → false |
+| B3 | `B3 AC4 accepts a request that touches an existing booking` | end-to-start touch → true |
+| B4 | `B4 AC4 rejects a request that overlaps an existing booking` | one-minute overlap → false |
+| B5 | `B5 F1 includes a room whose capacity exactly equals attendees` | capacity 8, attendees 8 → included |
+| B6 | `B6 F1 excludes a room whose capacity is one below attendees` | capacity 8, attendees 9 → excluded |
+| INT | `INT F1 F2 F5 filters a room and checks availability against that room` | filter fixed catalog then check busy/free IDs → false/true |
+
+### 6.2 Commands
+
+<!-- The commands exactly as you typed them, from app/. -->
+
+```
+$ npx vitest run
+```
+
+### 6.3 Final run
+
+<!-- The REAL output of the full run on your final code. Every test passes, and the number of
+     tests equals what your test files hold (R2). -->
+
+```
+ RUN  v3.2.7 /Users/arsenshakirov/se-practice/sis-04/app
+
+ ✓ src/booking.test.ts (16 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  17:09:24
+   Duration  767ms (transform 61ms, setup 0ms, collect 60ms, tests 6ms, environment 0ms, prepare 86ms)
+```
+
+## 7. Quality evaluation (Task 5)
+
+<!-- Original = your baseline commit. Final = what you submit. "How I obtained it" says how you
+     measured, so someone else could repeat it: "1.1 and 6.3 runs", "counted in 5.3",
+     "git ls-files app/src". Do not invent a metric. Tests: write passed/total, e.g. 19/19. -->
+
+| Measure | Original | Final | How I obtained it |
+| --- | --- | --- | --- |
+| Automated tests passed / total | 0/0 | 16/16 | Baseline and final terminal output in §§1.1 and 6.3. |
+| Duplicated logic locations removed | 0 | 1 repeated comparison | Compared the two `s < e` checks in starter `check()` with final `App.tsx` and `canBook()`; see §5.3. |
+| Code structure: modules and their responsibilities | 3 app source files | 7 app source files | `git ls-files sis-04/app/src` at baseline vs final; read against §5.1. |
+| Remaining limitation | One fixed demo scenario | Static fictional data and fixed local bookings; no persisted or live availability | Observed the final implementation in `rooms.ts`; live sources are excluded by scope. |
+
+## 8. AI evidence appendix
+
+<!-- At least three exchanges, one ### 8.N block each: the analysis (Task 1), the plan, and at
+     least one implementation, refactoring or test exchange. Copy the block for more.
+     The prompt as you sent it; the output may be cut to the part you used, with "[…]" where
+     you cut. Verified by: the test, run, file or check that confirmed it — not "it looked right". -->
+
+### 8.1 Exchange 1
+
+**Tool and model:** ChatGPT; model not displayed (response supplied by user)
+**Date:** 2026-11-16
+**Purpose:** Review current maintainability risks and prioritize improvements.
+
+**Prompt:**
+
+```text
+Review the current files in `sis-04/app/src` for maintainability. Identify three risks, each with a file or function and concrete evidence. Then suggest a short, ordered plan for any remaining improvements. Don’t edit files or invent issues; distinguish confirmed findings from suggestions.
+```
+
+**Output used:**
+
+```text
+## Confirmed findings
+
+1. **Room selection can unexpectedly revert — `App.tsx`.** The selected ID is stored separately from filtered rooms. A filtered-out ID can later be selected again when filters include it.
+2. **The main component is hard to maintain — `App.tsx`.** It combines state, formatting, selection, availability and page markup.
+3. **Availability tests repeat cases — `booking.test.ts`.** Duration and overlap behaviors appear both in AC and B boundary cases.
+
+## Ordered improvement plan
+
+1. Keep the selected room ID valid as filters change.
+2. Extract UI sections and move time helpers out of `App`.
+3. Consolidate duplicate tests while preserving boundary coverage.
+```
+
+**Problems found:** The selection ID could become stale across filter changes; `App` still contains extensive UI markup; duration and overlap cases are intentionally repeated for named IDs.
+**Changes made:** Added an effect to synchronize the selected room with current matches. Kept B boundary tests separate because the handout requires individual named cases.
+**Verified by:** Inspected `App.tsx` and test titles; reran the Vitest suite and production build.
+
+### 8.2 Exchange 2
+
+**Tool and model:** ChatGPT; model not displayed (response supplied by user)
+**Date:** 2026-11-16
+**Purpose:** Check every required test ID and identify gaps in the implementation evidence.
+
+**Prompt:**
+
+```text
+Review `sis-04/app/src/booking.test.ts`, `booking.ts`, and `filter.ts` against AC1–AC5, F1–F5, B1–B6, and INT in the SIS #04 handout. For each ID, say what the existing test checks and whether its expected result follows from the requirement. Flag any genuine gaps or incorrect expectations. Don’t edit files.
+```
+
+**Output used:**
+
+```text
+[…] The AC1 test's start equals `now`, so it is not a past request; a `start < now` case would directly match the stated requirement. AC5 checks a room with no bookings, so checking the booked room would better expose accidental mutation. F4 returns an empty array but does not assert the UI message. AC1 also lacks an explicit `start > end` case. The remaining AC, F, boundary, and integration expectations follow from the listed requirements.
+```
+
+**Problems found:** AC1's test used `start === now` while describing it as past; AC1 lacked reversed interval coverage; AC5 checked an empty booking list; F4 had no UI test.
+**Changes made:** Changed the past case to 499 vs. now 500, added a reversed interval assertion, and made AC5 check the booked fixture. Kept the F4 UI demonstration as screenshot evidence.
+**Verified by:** `npx vitest run` passed 16 tests; the filter-empty screenshot shows the rendered empty state.
+
+### 8.3 Exchange 3
+
+**Tool and model:** ChatGPT; model not displayed (response supplied by user)
+**Date:** 2026-11-16
+**Purpose:** Confirm demo states and review whether the UI communicates the data source clearly.
+
+**Prompt:**
+
+```text
+Review the current room finder UI against F4, F5, and AC6. Explain how to demonstrate an empty filter result, different availability for two rooms at the same times, and the narrow portrait layout. Identify any UI issue you can verify from the source; don’t claim browser behavior you haven’t observed or edit files.
+```
+
+**Output used:**
+
+```text
+The supplied screenshots show 21 attendees and the empty state; North Hall 201 unavailable and North Hall 204 available at the same 09:00 / 10:00–11:00 times; and a 390×844 narrow viewport. Source review identified that “LIVE DIRECTORY” suggests dynamic data although `rooms.ts` is hard-coded.
+```
+
+**Problems found:** The “LIVE DIRECTORY” badge misdescribed the static catalog.
+**Changes made:** Renamed it “ROOM CATALOG.”
+**Verified by:** The text is present in `App.tsx`; `npm run build` succeeded. Screenshot evidence demonstrates the earlier app state before this copy change.
+
+## 9. Checker results and known fails
+
+<!-- Every check still FAIL or ERROR in your last run of python tests/check_sis.py, and why.
+     The same IDs go in submission.yml known_fails. None left? Write: none. -->
+
+| Check | Why it still fails |
+| --- | --- |
+| L10 | The required 200–300 word first-person reflection must be written by the student, so it is not supplied here. |
+
+## 10. AI reflection (Task 6)
+
+<!-- 200–300 words, your own words, no assistant. Answer all five:
+     What context did you provide the AI assistant? Which generated suggestions were useful or
+     incorrect? What did you personally verify? How did tests influence your engineering
+     decisions? What would you improve next? -->
+
+Student-authored 200–300 word reflection required; left blank by the assistant to avoid writing a first-person account on the student's behalf.

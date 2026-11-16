@@ -1,0 +1,60 @@
+# SIS #04 — the declaration. FACTS ONLY: every explanation stays in report.md.
+#
+# Fill this in LAST, after your final run of the checker, then validate it:
+#     python tests/check_sis.py
+#     python tests/validate_submission.py
+#
+# Your checker numbers are re-run by the instructor at the head of your pull request.
+# Numbers that do not match what that commit produces cost the whole workflow criterion.
+# A FAIL you report honestly — here and under known_fails — costs nothing extra.
+#
+# Format rules: two spaces for indentation, never tabs. Leave the keys exactly as they are.
+
+schema: 1
+assignment: "sis-04"            # do not edit
+
+student:
+  name: Arsen Shakirov
+  student_id: 24B031126
+  group: Monday 16:00-19:00
+  github: Arseen04
+
+assistant:
+  tool: ChatGPT in Codex desktop
+  model: not displayed
+
+project:                        # exactly as in report.md section 1
+  start_from: starter
+  baseline_commit: f4df97d
+  language: ts
+  vitest: 3.2.7
+
+counts:                         # the checker prints most of these under --json "measured"
+  rooms: 5
+  tests_original: 0
+  tests_final: 16
+  risks: 3
+  exchanges: 3
+
+checker:                        # from your LAST run of python tests/check_sis.py
+  pass: 32
+  fail: 1
+  error: 0
+  commit: 8be4090
+  known_fails: [L10]
+
+review_findings:
+  # Three or more. One line each, and each one names what it is about: an F-rule (F1-F5),
+  # an AC (AC1-AC6), a boundary test (B1-B6), INT, or a file.
+  # Worthless:        "The refactoring improved the code"
+  # Worth everything: "F2: the assistant's filter used equipment.some(), so a room with only a projector
+  #                    matched projector + whiteboard; the F2 test caught it"
+  - "F2: filterRooms requires every selected equipment item; the fixed-data F2 test expects only the room with all three."
+  - "F5: checkRoom supplies the selected room's own bookings; the same-time F5 test distinguishes busy and free rooms."
+  - "AC5: the test compares serialized catalog data before and after checkRoom to verify no mutation."
+
+honesty:
+  baseline_unchanged: yes       # app/ at the baseline commit is the starting point as it was
+  runs_unedited: yes            # every run in report.md is pasted from a real terminal
+  no_invented_metrics: yes      # every number in section 7 was measured as the row says
+  ai_usage_disclosed: yes       # tool use and the incomplete exchange/reflection evidence are disclosed

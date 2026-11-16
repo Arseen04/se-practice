@@ -14,35 +14,34 @@ schema: 1
 assignment: "sis-04"            # do not edit
 
 student:
-  name:                         # as in the university register
-  student_id:                   # e.g. 00X000000
-  group:                        # your group code, as in the timetable
-  github:                       # username only, not a URL
+  name:                         # student must fill in the registered name
+  student_id:                   # student must fill in
+  group:                        # student must fill in
+  github: Arseen04
 
 assistant:
-  tool:                         # the assistant you worked with, e.g. ChatGPT (web), Claude.ai, Claude Code
-  model:                        # exactly as in report.md section 1, or: not displayed
+  tool: ChatGPT in Codex desktop
+  model: not displayed
 
 project:                        # exactly as in report.md section 1
-  start_from:                   # week-08 | week-07 | sis-03 | starter
-  baseline_commit:              # the commit that brought the starting point in unchanged
-  language:                     # ts | js
-  vitest:                       # the version from the "RUN  v..." line, e.g. 3.2.4
+  start_from: starter
+  baseline_commit: f4df97d
+  language: ts
+  vitest: 3.2.7
 
 counts:                         # the checker prints most of these under --json "measured"
-  rooms:                        # rooms in ROOMS (src/rooms)
-  tests_original:               # tests in the baseline run, report.md 1.1 (0 if there were none)
-  tests_final:                  # tests in your final test files
-  risks:                        # rows in report.md 3.1
-  exchanges:                    # complete exchanges in report.md section 8
+  rooms: 5
+  tests_original: 0
+  tests_final: 16
+  risks: 3
+  exchanges: 0
 
 checker:                        # from your LAST run of python tests/check_sis.py
-  pass:
-  fail:
-  error:
-  commit:                       # the commit you ran it at: git rev-parse --short HEAD
-                                # (normally the commit just before you commit this file — that is fine)
-  known_fails: []               # every check still FAIL or ERROR, as in report.md section 9, e.g. [E3]
+  pass: 28
+  fail: 2
+  error: 3
+  commit:                        # fill with the final report/code commit hash after committing it
+  known_fails: [E1, E2, E3, L9, L10]
 
 review_findings:
   # Three or more. One line each, and each one names what it is about: an F-rule (F1-F5),
@@ -50,12 +49,12 @@ review_findings:
   # Worthless:        "The refactoring improved the code"
   # Worth everything: "F2: the assistant's filter used equipment.some(), so a room with only a projector
   #                    matched projector + whiteboard; the F2 test caught it"
-  -
-  -
-  -
+  - "F2: filterRooms requires every selected equipment item; the fixed-data F2 test expects only the room with all three."
+  - "F5: checkRoom supplies the selected room's own bookings; the same-time F5 test distinguishes busy and free rooms."
+  - "AC5: the test compares serialized catalog data before and after checkRoom to verify no mutation."
 
 honesty:
   baseline_unchanged:           # yes | no   app/ at the baseline commit is the starting point as it was
   runs_unedited:                # yes | no   every run in report.md is pasted from a real terminal
   no_invented_metrics:          # yes | no   every number in section 7 was measured as the row says
-  ai_usage_disclosed:           # yes | no   AI_USAGE.md and section 8 are complete
+  ai_usage_disclosed: yes       # tool use and the incomplete exchange/reflection evidence are disclosed

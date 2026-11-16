@@ -17,7 +17,7 @@
 | Assistant (tool) | ChatGPT (Codex desktop) |
 | Assistant model | not displayed |
 | Starting point | starter |
-| Baseline commit | a7581aa |
+| Baseline commit | f4df97d |
 | Language (ts or js) | ts |
 | Vitest version | 3.2.7 |
 | Where I ran the tests | Local terminal, `sis-04/app/` |
@@ -61,7 +61,7 @@ sis-04/starter/vite.config.ts, tsconfig.json, index.html — build and entry con
      (no login, payments, live APIs or database; fictional data only). Unedited. -->
 
 ```text
-I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6: reject invalid or past intervals (AC1), enforce the 120-minute maximum (AC2), reject blocked rooms (AC3), reject overlaps but allow endpoint touching (AC4), report Available/Unavailable without changing booking data (AC5), and provide clear responsive feedback (AC6). Add a fictional catalog where every room has id, name, capacity, equipment, blocked status and its own bookings. Implement F1 capacity >= attendees, F2 ALL selected equipment, F3 blocked rooms never available, F4 a clear empty state, and F5 availability based on the selected room's own bookings. Constraints: fictional data only; no login, payments, live APIs or database. Keep room data, booking rules, filtering and UI separate using rooms.ts, booking.ts with canBook/checkRoom, and filter.ts with filterRooms. Add tests named with AC1–AC5, F1–F5, B1–B6 and INT; keep the changes small and verify each rule.
+The user’s initial task message asked for the Smart Campus Room Availability Checker extension and included the assignment requirements. The requirements carried into implementation were AC1–AC6: valid future time ranges, the 120-minute limit, blocked-room rejection, endpoint-safe overlap handling, no booking mutation, and clear responsive feedback. New requirements were F1 capacity at least attendees, F2 every selected equipment item, F3 blocked means unavailable, F4 an empty state, and F5 use the selected room's bookings. Constraints were fictional data only, no login, payments, live APIs or database. No separate fresh analysis chat was opened; the map above was written after inspecting the starter and was not in the initial user message.
 ```
 
 ## 3. Codebase analysis (Task 1)
@@ -91,7 +91,7 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 
 | Suggestion (as the assistant made it) | Decision | Why — with the AC, F-rule, test or file behind it |
 | --- | --- | --- |
-| The assignment README recommends Week 08 as the default starting point. | Modified | The visible Week 07/08 directories have only `dist` output (checked with `find`); there is no source tree to bring in unchanged. I chose the provided runnable starter, an explicitly allowed starting point, so the baseline source is reviewable and editable. |
+| The handout recommends Week 08 as the default starting point (not a separate AI recommendation). | Modified | The visible Week 07/08 directories have only `dist` output (checked with `find`); there is no source tree to bring in unchanged. I chose the provided runnable starter, an explicitly allowed starting point, so the baseline source is reviewable and editable. |
 
 ## 4. Feature extension (Task 2)
 
@@ -100,7 +100,7 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 <!-- Short: the catalog (how many rooms, which equipment), how the filter is chosen on the page,
      what the empty state says, what happens to an old result when the room changes. -->
 
-(write here)
+I added five fictional rooms with capacity, equipment, blocked status and individual bookings. Attendees and equipment chips filter the catalog; the empty message is “No rooms fit those needs.” Blocked rooms remain visible with a BLOCKED label and are rejected by the availability rule. Selecting a different room clears an old result before showing the selected room's own bookings.
 
 ### 4.2 Demonstration
 
@@ -109,11 +109,11 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 
 | Screenshot | What it shows |
 | --- | --- |
-| `evidence/filter-match.png` | (write here) |
-| `evidence/filter-empty.png` | (write here) |
-| `evidence/switch-a.png` | (write here) |
-| `evidence/switch-b.png` | (write here) |
-| `evidence/narrow.png` | (write here) |
+| `evidence/filter-match.png` | Not captured in this run. |
+| `evidence/filter-empty.png` | Not captured in this run. |
+| `evidence/switch-a.png` | Not captured in this run. |
+| `evidence/switch-b.png` | Not captured in this run. |
+| `evidence/narrow.png` | Not captured in this run. |
 
 ## 5. Refactoring (Task 3)
 
@@ -123,10 +123,10 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 
 | Module or component | Responsibility |
 | --- | --- |
-| `src/rooms.ts` | (write here) |
-| `src/booking.ts` | (write here) |
-| `src/filter.ts` | (write here) |
-| (write here) | (write here) |
+| `src/rooms.ts` | `Room`/`Booking` types, five fictional rooms and equipment options. |
+| `src/booking.ts` | Pure AC1–AC5 `canBook` rule and room-specific `checkRoom` adapter. |
+| `src/filter.ts` | Capacity and all-equipment filter (`filterRooms`). |
+| `src/App.tsx` + `src/index.css` | Controls, rendered catalog and responsive presentation; imports rules and data. |
 
 ### 5.2 Design decisions
 
@@ -135,8 +135,8 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 
 | Decision | Alternative I did not take | Why |
 | --- | --- | --- |
-| (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) |
+| Keep blocked rooms visible and labelled. | Hide blocked rooms from the catalog. | Visibility helps users see the full catalog, while `checkRoom` still rejects a blocked room (AC3/F3). |
+| Keep booking rules pure and pass in the chosen room's bookings. | Keep decisions in component event handlers. | This makes boundary behavior testable without rendering the UI and ties F5 to each room's own data. |
 
 ### 5.3 Duplication removed
 
@@ -144,7 +144,7 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 
 | Before (file / function, what was repeated) | After (where it lives now) |
 | --- | --- |
-| (write here) | (write here) |
+| `App.tsx` `check()` checked `s < e` once to set an error and repeated it in the availability condition. | The duplicate start/end decision was removed from the UI; `src/booking.ts` `canBook()` owns interval validity. |
 
 ## 6. Automated tests (Task 4)
 
@@ -155,30 +155,30 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 
 | ID | Test title (as in the file) | Input → expected |
 | --- | --- | --- |
-| AC1 | (write here) | (write here) |
-| AC2 | (write here) | (write here) |
-| AC3 | (write here) | (write here) |
-| AC4 | (write here) | (write here) |
-| AC5 | (write here) | (write here) |
-| F1 | (write here) | (write here) |
-| F2 | (write here) | (write here) |
-| F3 | (write here) | (write here) |
-| F4 | (write here) | (write here) |
-| F5 | (write here) | (write here) |
-| B1 | (write here) | (write here) |
-| B2 | (write here) | (write here) |
-| B3 | (write here) | (write here) |
-| B4 | (write here) | (write here) |
-| B5 | (write here) | (write here) |
-| B6 | (write here) | (write here) |
-| INT | (write here) | (write here) |
+| AC1 | `AC1 rejects a start equal to end and requests in the past` | `start === end`, past start → false |
+| AC2 | `AC2 rejects requests longer than the allowed 120 minutes` | 121-minute interval → false |
+| AC3 | `AC3 and F3 never report a blocked room as available` | blocked room → false |
+| AC4 | `AC4 rejects overlap and allows bookings that touch at an endpoint` | overlapping → false; touching → true |
+| AC5 | `AC5 does not mutate booking data when checking availability` | snapshot before/after check → unchanged |
+| F1 | `F1 includes rooms with capacity at least the requested attendees` | 8 attendees → capacities 8, 12, 20 included |
+| F2 | `F2 requires every selected equipment item` | display + whiteboard + video → only `free` |
+| F3 | `AC3 and F3 never report a blocked room as available` | blocked → false |
+| F4 | `F4 returns no rooms for impossible requirements so the UI can show its empty state` | 21 attendees → empty array |
+| F5 | `F5 checks the selected room own bookings for the same request` | same time, busy → false; free → true |
+| B1 | `B1 AC2 accepts a booking exactly 120 minutes long` | 120 minutes → true |
+| B2 | `B2 AC2 rejects a booking 121 minutes long` | 121 minutes → false |
+| B3 | `B3 AC4 accepts a request that touches an existing booking` | end-to-start touch → true |
+| B4 | `B4 AC4 rejects a request that overlaps an existing booking` | one-minute overlap → false |
+| B5 | `B5 F1 includes a room whose capacity exactly equals attendees` | capacity 8, attendees 8 → included |
+| B6 | `B6 F1 excludes a room whose capacity is one below attendees` | capacity 8, attendees 9 → excluded |
+| INT | `INT F1 F2 F5 filters a room and checks availability against that room` | filter fixed catalog then check busy/free IDs → false/true |
 
 ### 6.2 Commands
 
 <!-- The commands exactly as you typed them, from app/. -->
 
-```text
-(paste here)
+```
+$ npx vitest run
 ```
 
 ### 6.3 Final run
@@ -186,8 +186,15 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 <!-- The REAL output of the full run on your final code. Every test passes, and the number of
      tests equals what your test files hold (R2). -->
 
-```text
-(paste here)
+```
+ RUN  v3.2.7 /Users/arsenshakirov/se-practice/sis-04/app
+
+ ✓ src/booking.test.ts (16 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  16:16:14
+   Duration  242ms (transform 26ms, setup 0ms, collect 25ms, tests 2ms, environment 0ms, prepare 42ms)
 ```
 
 ## 7. Quality evaluation (Task 5)
@@ -198,10 +205,10 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 
 | Measure | Original | Final | How I obtained it |
 | --- | --- | --- | --- |
-| Automated tests passed / total | (write here) | (write here) | (write here) |
-| Duplicated logic locations removed | (write here) | (write here) | (write here) |
-| Code structure: modules and their responsibilities | (write here) | (write here) | (write here) |
-| Remaining limitation | (write here) | (write here) | (write here) |
+| Automated tests passed / total | 0/0 | 16/16 | Baseline and final terminal output in §§1.1 and 6.3. |
+| Duplicated logic locations removed | 0 | 1 repeated comparison | Compared the two `s < e` checks in starter `check()` with final `App.tsx` and `canBook()`; see §5.3. |
+| Code structure: modules and their responsibilities | 3 app source files | 7 app source files | `git ls-files sis-04/app/src` at baseline vs final; read against §5.1. |
+| Remaining limitation | One fixed demo scenario | Static fictional data and fixed local bookings; no persisted or live availability | Observed the final implementation in `rooms.ts`; live sources are excluded by scope. |
 
 ## 8. AI evidence appendix
 
@@ -212,69 +219,69 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 
 ### 8.1 Exchange 1
 
-**Tool and model:** (write here)
-**Date:** (write here)
-**Purpose:** (write here)
+**Tool and model:** ChatGPT in Codex desktop; model not displayed
+**Date:** 2026-11-16
+**Purpose:** Implement the room catalog, modules and regression tests for this task.
 
 **Prompt:**
 
 ```text
-(paste here)
+The user's initial request was the full SIS #04 brief pasted at the beginning of this conversation: extend the app with a room catalog and filters, preserve AC1–AC6, satisfy F1–F5, refactor into modules, add tests/evidence, and create a measured report. This is a summary, not a verbatim prompt.
 ```
 
 **Output used:**
 
 ```text
-(paste here)
+The implementation output used is the source change represented by `rooms.ts`, `filter.ts`, `booking.ts`, `App.tsx`, `index.css` and `booking.test.ts`.
 ```
 
-**Problems found:** (write here)
-**Changes made:** (write here)
-**Verified by:** (write here)
+**Problems found:** The starter had two rooms and no capacity/equipment; its rules were inside `check()`.
+**Changes made:** Added five fictional rooms, pure filter/booking modules and a responsive UI; wrote 16 fixed-data tests.
+**Verified by:** `npx vitest run` (16/16) and `npm run build` succeeded; inspected the browser-rendered desktop UI.
 
 ### 8.2 Exchange 2
 
-**Tool and model:** (write here)
-**Date:** (write here)
-**Purpose:** (write here)
+**Tool and model:** No separate second AI exchange was conducted.
+**Date:** 2026-11-16
+**Purpose:** Not applicable.
 
 **Prompt:**
 
 ```text
-(paste here)
+Not applicable; this was not a separate prompt/exchange.
 ```
 
 **Output used:**
 
 ```text
-(paste here)
+No distinct output to report.
 ```
 
-**Problems found:** (write here)
-**Changes made:** (write here)
-**Verified by:** (write here)
+**Problems found:** Not applicable.
+**Changes made:** Not applicable.
+**Verified by:** Not applicable.
 
 ### 8.3 Exchange 3
 
-**Tool and model:** (write here)
-**Date:** (write here)
-**Purpose:** (write here)
+**Tool and model:** No separate third AI exchange was conducted.
+**Date:** 2026-11-16
+**Purpose:** Not applicable.
 
 **Prompt:**
 
 ```text
-(paste here)
+Not applicable; this was not a separate prompt/exchange.
 ```
 
 **Output used:**
 
 ```text
-(paste here)
+No distinct output to report.
 ```
 
-**Problems found:** (write here)
-**Changes made:** (write here)
-**Verified by:** (write here)
+**Problems found:** Not applicable.
+**Changes made:** Not applicable.
+**Verified by:** Not applicable.
 
 ## 9. Checker results and known fails
 
@@ -283,7 +290,9 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
 
 | Check | Why it still fails |
 | --- | --- |
-| (write here) | (write here) |
+| E1–E3 | Five requested PNG screenshots were not saved to `evidence/`; browser screenshots could be inspected but not exported into the repository in this run. |
+| L9 | Only one initial task message appears in the conversation; two additional distinct AI exchanges are not available to quote. |
+| L10 | The required 200–300 word first-person reflection must be written by the student, so it is not supplied here. |
 
 ## 10. AI reflection (Task 6)
 
@@ -292,4 +301,4 @@ I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6
      incorrect? What did you personally verify? How did tests influence your engineering
      decisions? What would you improve next? -->
 
-(write here)
+Student-authored 200–300 word reflection required; left blank by the assistant to avoid writing a first-person account on the student's behalf.

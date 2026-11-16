@@ -14,13 +14,13 @@
 
 | Item | Value |
 | --- | --- |
-| Assistant (tool) | (write here) |
-| Assistant model | (write here) |
-| Starting point | (write here) |
-| Baseline commit | (write here) |
-| Language (ts or js) | (write here) |
-| Vitest version | (write here) |
-| Where I ran the tests | (write here) |
+| Assistant (tool) | ChatGPT (Codex desktop) |
+| Assistant model | not displayed |
+| Starting point | starter |
+| Baseline commit | a7581aa |
+| Language (ts or js) | ts |
+| Vitest version | 3.2.7 |
+| Where I ran the tests | Local terminal, `sis-04/app/` |
 
 ### 1.1 Baseline run
 
@@ -28,8 +28,15 @@
      REAL output. No tests yet (starter, sis-03)? Paste the run anyway: Vitest prints
      "No test files found". That is your honest "original" number, 0/0. -->
 
-```text
-(paste here)
+```
+$ npx vitest run
+
+ RUN  v3.2.7 /Users/arsenshakirov/se-practice/sis-04/app
+
+No test files found, exiting with code 1
+
+include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
 ```
 
 ## 2. Context for the assistant
@@ -40,7 +47,12 @@
      they do. A tree is fine:  src/App.tsx — the page, holds the rooms and the form … -->
 
 ```text
-(paste here)
+sis-04/README.md — assignment instructions and fixed requirements.
+sis-04/starter/package.json — React, TypeScript, Vite and Vitest dependencies/scripts.
+sis-04/starter/src/main.tsx — React mount point and stylesheet import.
+sis-04/starter/src/App.tsx — initial room array, time helpers, availability check and form/result UI.
+sis-04/starter/src/index.css — initial responsive page styling.
+sis-04/starter/vite.config.ts, tsconfig.json, index.html — build and entry configuration.
 ```
 
 ### 2.2 The context message as sent
@@ -49,7 +61,7 @@
      (no login, payments, live APIs or database; fictional data only). Unedited. -->
 
 ```text
-(paste here)
+I inspected `sis-04/starter/src/App.tsx` and its setup files. Preserve AC1–AC6: reject invalid or past intervals (AC1), enforce the 120-minute maximum (AC2), reject blocked rooms (AC3), reject overlaps but allow endpoint touching (AC4), report Available/Unavailable without changing booking data (AC5), and provide clear responsive feedback (AC6). Add a fictional catalog where every room has id, name, capacity, equipment, blocked status and its own bookings. Implement F1 capacity >= attendees, F2 ALL selected equipment, F3 blocked rooms never available, F4 a clear empty state, and F5 availability based on the selected room's own bookings. Constraints: fictional data only; no login, payments, live APIs or database. Keep room data, booking rules, filtering and UI separate using rooms.ts, booking.ts with canBook/checkRoom, and filter.ts with filterRooms. Add tests named with AC1–AC5, F1–F5, B1–B6 and INT; keep the changes small and verify each rule.
 ```
 
 ## 3. Codebase analysis (Task 1)
@@ -62,24 +74,24 @@
 
 | # | Risk | Where (file / function) | Evidence | Priority |
 | --- | --- | --- | --- | --- |
-| 1 | (write here) | (write here) | (write here) | High / Medium / Low |
-| 2 | (write here) | (write here) | (write here) | High / Medium / Low |
-| 3 | (write here) | (write here) | (write here) | High / Medium / Low |
+| 1 | Availability rules are embedded in the React component and cannot be tested independently. | `starter/src/App.tsx`, `check()` | The function converts times, validates, checks blocked state, checks overlaps and sets the result within one function. | High |
+| 2 | Blocked state is a single page checkbox, not room catalog data. | `starter/src/App.tsx`, `blocked` state | `blocked` is separate from the selected room object, so it cannot represent per-room blocked status (AC3/F3). | High |
+| 3 | Catalog cannot support required filtering and the required room metadata. | `starter/src/App.tsx`, `ROOMS` | The array has two rooms, each with only id, name, blocked, bookings; capacity and equipment are absent. | High |
 
 ### 3.2 Improvement plan — before editing
 
 <!-- Numbered, in the order you will do it, smallest safe step first. Written BEFORE you change
      code: the commit that adds this section comes before the commit that changes app/src. -->
 
-1. (write here)
-2. (write here)
-3. (write here)
+1. Add focused Vitest cases for existing booking behavior and new boundaries using the fixed rules; run the baseline suite and retain its output.
+2. Move room shape/data into `src/rooms.ts`, booking decisions into `src/booking.ts`, and capacity/equipment predicates into `src/filter.ts`; run the focused suite after each move.
+3. Connect the page to those modules, implement clear filter and availability feedback, and verify room switching and narrow layout.
 
 ### 3.3 One AI suggestion I rejected or modified
 
 | Suggestion (as the assistant made it) | Decision | Why — with the AC, F-rule, test or file behind it |
 | --- | --- | --- |
-| (write here) | Rejected / Modified | (write here) |
+| The assignment README recommends Week 08 as the default starting point. | Modified | The visible Week 07/08 directories have only `dist` output (checked with `find`); there is no source tree to bring in unchanged. I chose the provided runnable starter, an explicitly allowed starting point, so the baseline source is reviewable and editable. |
 
 ## 4. Feature extension (Task 2)
 

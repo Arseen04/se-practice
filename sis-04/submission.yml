@@ -14,9 +14,9 @@ schema: 1
 assignment: "sis-04"            # do not edit
 
 student:
-  name:                         # student must fill in the registered name
-  student_id:                   # student must fill in
-  group:                        # student must fill in
+  name: Arsen Shakirov
+  student_id: 24B031126
+  group: Monday 16:00-19:00
   github: Arseen04
 
 assistant:
